@@ -9,7 +9,8 @@ def main():
     config = Config()
     manager = ModelManager(config)
     manager.train_model()
-    plot_accuracies(manager.train_accuracies, manager.val_accuracies)
+    #plot_save_path = os.path.join(os.getcwd(), 'training_validation_accuracy.png')
+    #plot_accuracies(manager.train_accuracies, manager.val_accuracies, save_path=plot_save_path)
 
 if __name__ == "__main__":
     main()

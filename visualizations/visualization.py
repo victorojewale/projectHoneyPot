@@ -12,3 +12,6 @@ def plot_accuracies(train_accuracies, val_accuracies):
     plt.legend()
     plt.grid(True)
     plt.show()
+    #plt.savefig(save_path)
+    plt.close()  
+    #print(f"Plot saved to {save_path}")

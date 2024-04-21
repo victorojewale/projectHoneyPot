@@ -4,43 +4,52 @@ import torch.nn as nn
 import torch.optim as optim
 from datasets import load_dataset
 from torch.utils.data import DataLoader
-from torchvision.transforms import ToPILImage, Resize, CenterCrop, Normalize, Compose, ToTensor
+from torchvision.transforms import ToPILImage, Resize, CenterCrop, Normalize, Compose, ToTensor, Lambda
+from PIL import Image
 
 # from Hugging Face datasets
-dataset = load_dataset("imagenet-1k")
+dataset = load_dataset("zh-plus/tiny-imagenet")
+print(dataset.keys())
 
 # transformations and preprocessing
 transform = Compose([
-    Resize(256),
+    Lambda(lambda x: x.convert("RGB") if x.mode != "RGB" else x),
+    Resize(224),
     CenterCrop(224),
     ToTensor(),
     Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 def preprocess_data(examples):
-    examples['image'] = [transform(ToPILImage()(image)) for image in examples['image']]
+    if isinstance(examples['image'][0], Image.Image):
+        # If the images are already PIL images, just apply the transform without ToPILImage()
+        examples['image'] = [transform(image) for image in examples['image']]
+    else:
+        # If the images are not PIL images, convert them to PIL first 
+        examples['image'] = [transform(ToPILImage()(image)) for image in examples['image']]
     return examples
 
 
 dataset = dataset.with_transform(preprocess_data)
 
+#dataset.keys()
+
 # Prepare data loaders
 train_loader = DataLoader(dataset['train'], batch_size=32, shuffle=True)
-val_loader = DataLoader(dataset['validation'], batch_size=32, shuffle=False)
-
-model = models.resnet50()
+val_loader = DataLoader(dataset['valid'], batch_size=32, shuffle=False)
 
 
-model_path = 'models/robust_resnet50.pth'  
-model.load_state_dict(torch.load(model_path))
+# loading intheb model
+
+model = models.resnet50(pretrained=True)
+
 
 # Configure the model for fine-tuning
 for param in model.parameters():
     param.requires_grad = False
 
 # replacing the last fully connected layer
-model.fc = nn.Linear(model.fc.in_features, 1000)  # ImageNet-1k has 1000 classes
-model.fc.requires_grad = True
+model.fc = nn.Linear(model.fc.in_features, 200)  # tinyImgnet has 200 classes
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

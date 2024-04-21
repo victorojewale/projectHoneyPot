@@ -2,33 +2,28 @@
 import torch
 from torch import nn, optim
 from torchvision import models
-from data_handler.data_loader import load_data
+from data_handler.data_loader import setup_data_loaders
 
 class ModelManager:
     def __init__(self, config):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = self.load_model(config.model_name, config.weights_path, config.num_classes)
-        self.train_loader, self.val_loader = load_data(config.dataset_name, config.batch_size)
-        self.optimizer = optim.Adam(
-            filter(lambda p: p.requires_grad, self.model.parameters()), 
-            lr=config.learning_rate
-        )
+        self.model = self.load_model(config.model_name, config.num_classes)
+        self.train_loader, self.val_loader = setup_data_loaders()
+        self.optimizer = optim.Adam(self.model.fc.parameters(), lr=config.learning_rate)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs = config.num_epochs
         self.early_stopping_limit = config.early_stopping_limit
         self.train_accuracies = []
         self.val_accuracies = []
 
-    def load_model(self, model_name, weights_path, num_classes):
-        model = getattr(models, model_name)(pretrained=False)
-        model.fc = nn.Linear(model.fc.in_features, num_classes)
-        state_dict = torch.load(weights_path)
-        model.load_state_dict(state_dict, strict=False)
-        model.to(self.device)
+    def load_model(self, model_name, num_classes):
+        model = getattr(models, model_name)(pretrained=True)
         for param in model.parameters():
             param.requires_grad = False
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
         model.fc.requires_grad = True
-        return model
+        return model.to(self.device)
+
 
     def train_model(self):
         best_acc = 0
@@ -36,8 +31,8 @@ class ModelManager:
 
         for epoch in range(self.num_epochs):
             self.model.train()
-            for inputs, labels in self.train_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+            for batch in self.train_loader:
+                inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
@@ -64,8 +59,8 @@ class ModelManager:
         self.model.eval()
         correct, total = 0, 0
         with torch.no_grad():
-            for inputs, labels in loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+            for batch in loader:
+                inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
@@ -74,10 +69,18 @@ class ModelManager:
 
 
 
-#    def load_model(self, model_name, num_classes):
-#        model = getattr(models, model_name)(pretrained=True)
+#    def load_model(self, model_name, weights_path, num_classes):
+#        # Load the model without pretrained weights and replace the final layer
+#        model = getattr(models, model_name)(pretrained=False)
 #        for param in model.parameters():
-#            param.requires_grad = False
-#        model.fc = nn.Linear(model.fc.in_features, num_classes)
-#        model.fc.requires_grad = True
-#        return model.to(self.device)
+#            param.requires_grad = False  # Freeze all parameters initially
+#        model.fc = nn.Linear(model.fc.in_features, num_classes)  # Replace the final layer
+#        model.fc.requires_grad = True  # Unfreeze the final layer
+
+        # Load state dict if specified (ensure it doesn't reset requires_grad)
+#        if weights_path:
+#            state_dict = torch.load(weights_path)
+#            model.load_state_dict(state_dict)
+        
+#        model.to(self.device)
+#        return model

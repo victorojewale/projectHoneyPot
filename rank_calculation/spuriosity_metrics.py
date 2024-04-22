@@ -58,8 +58,9 @@ def bin_by_spuriosity(spuriosity_values_of_data, class_labels, class_key=None):
     bin the data per class by 0-25 percentile as low spurious, 25-75 as medium 
     and 75-100 percentile spuriosity as high spurious
     
-    output: num_of_classes, 3, idx of images of a class in original data
+    output: dict with class as key and array value (3, idx of images of a class in original data)
     '''
+    result = {}
     for class_idx in class_labels: 
         image_idx_of_class = np.where(class_labels == class_idx)[0]
         spurious_vals_class = spuriosity_values_of_data[image_idx_of_class]
@@ -67,6 +68,9 @@ def bin_by_spuriosity(spuriosity_values_of_data, class_labels, class_key=None):
         low_bin = image_idx_of_class[np.where(spurious_vals_class<= percentiles[0])]
         mid_bin = image_idx_of_class[np.where((spurious_vals_class>percentiles[0]) & (spurious_vals_class<=percentiles[1]))]
         high_bin = image_idx_of_class[np.where(spurious_vals_class>percentiles[1])]
+        result[class_idx] = np.array([low_bin, mid_bin, high_bin])
+    return result
+
 if __name__ == '__main__': 
     pass
     

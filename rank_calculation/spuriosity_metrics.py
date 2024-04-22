@@ -23,9 +23,11 @@ def calc_spurious_features_by_class(aggregated_human_labels):
     aggregated_human_labels is the csv file aggregated_imagenet_mturk.csv in data_annotations. 
     This will return a dictionary with key as class index (0-999) and value as the feature index of spurious features in penultimate layer.
     '''
-    return dict()
+    class_ftr_idx = aggregated_human_labels[aggregated_human_labels['Answer.main']==1].groupby('Input.class_index')['Input.feature_index'].agg(list)
+    class_ftr_idx = dict(class_ftr_idx)
+    return class_ftr_idx
 
-def calculate_spuriosity_per_class(feature_activations, class_labels, spurious_features_by_class)
+def calculate_spuriosity_per_class(feature_activations, class_labels, spurious_features_by_class):
     '''
     inputs: 
     feature_activations: a tensor/array of num_of_images, 2048 feature activations of resnet for imagenet trained resnet
@@ -76,5 +78,9 @@ def bin_by_spuriosity(spuriosity_values_of_data, class_labels, spurious_features
     return result
 
 if __name__ == '__main__': 
-    pass
-    
+    #the file paths work if you run from root and not within the module folder
+    aggregated_data_path = 'data_annotations/aggregated_imagenet_mturk.csv'
+    aggregated_human_labels = pd.read_csv(aggregated_data_path)
+    spurious_features_by_class = calc_spurious_features_by_class(aggregated_human_labels)
+    print([spurious_features_by_class[i] for i in list(spurious_features_by_class.keys())[:5]])
+    print('output check', len(spurious_features_by_class), ', should be 357 for imagenet.')

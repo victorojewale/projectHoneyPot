@@ -40,8 +40,9 @@ def store_aggregated_labels(filename, aggregated_labels):
 
 
 if __name__ == '__main__':
-    mturk_data_annotations_path = '../data_annotations/mturk_results_imagenet.csv'
-    aggregated_data_path = '../data_annotations/aggregated_imagenet_mturk.csv'
+    #the file paths work if you run from root and not within the module folder
+    mturk_data_annotations_path = 'data_annotations/mturk_results_imagenet.csv'
+    aggregated_data_path = 'data_annotations/aggregated_imagenet_mturk.csv'
     mturk_labels = load_human_labels(mturk_data_annotations_path)
     print(len(mturk_labels))
     aggregated_labels = aggregate_class_wise(mturk_labels)

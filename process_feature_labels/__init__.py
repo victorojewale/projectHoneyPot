@@ -1,1 +1,1 @@
-from .annotations_processor.py import *
+from .annotations_processor import *

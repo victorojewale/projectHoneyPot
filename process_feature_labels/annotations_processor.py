@@ -14,7 +14,8 @@
 # 82,n01484850,2,1697,2,separate_object,4.0,Focus is on the water of the ocean around the great white shark.
 
 # feature classification logic:
-# core feature -> main_object, spurious feature -> background, separate_object
+# core feature -> main_object, represented as 0.
+# spurious feature -> background, separate_object, represented as 1.
 
 # vote aggregation logic: 
 # Moayeri et Al. 2023, Appendix I.2.1: "for which majority of workers selected either background or separate object as the answer were deemed to be spurious"
@@ -25,11 +26,15 @@ import pandas as pd
 
 def load_human_labels(filename): 
     df = pd.read_csv(filename)
+    df['Answer.main'] = df['Answer.main'].transform(lambda x: 0 if x=='main_object' else 1)
     return df
 
 def aggregate_class_wise(mturk_labels): 
-    return None
+    aggregated_df = mturk_labels.groupby(['Input.wordnet_id', 'Input.class_index', 'Input.feature_index', 'Input.feature_rank'])['Answer.main'].sum().reset_index()
+    aggregated_df['Answer.main'] = aggregated_df['Answer.main'].apply(lambda x: 1 if x>=3 else 0)
+    return aggregated_df
 def store_aggregated_labels(filename, aggregated_labels): 
+    aggregated_labels.to_csv(filename, index=False)
     return None
 
 

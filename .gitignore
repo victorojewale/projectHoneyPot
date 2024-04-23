@@ -1,4 +1,5 @@
-base_models/*
+models/*.pt
+models/*.pth
 process_feature_labels/__pycache__/*
 configs/__pycache__/*
 data_handler/__pycache__/*

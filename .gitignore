@@ -1,2 +1,6 @@
 base_models/*
 process_feature_labels/__pycache__/*
+configs/__pycache__/*
+data_handler/__pycache__/*
+models/__pycache__/*
+visualizations/__pycache__/*

@@ -7,3 +7,6 @@
 ## process_feature_labels:        
     - annotations_processor.py -> takes as input multi-human labeling results for each (feature,class) pair and aggregates it class-wise.          
 	- test_spuriosity_calculation.ipynb -> Unit tests notebook to explore the functionality of this module.      
+
+## Public code implementation for generating dataset: 
+https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py

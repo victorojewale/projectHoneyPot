@@ -87,7 +87,8 @@ if __name__ == '__main__':
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
     train, valid = setup_data_loaders()
-    cache_fname = '../cache_for_data_loading_ignore'
+    cache_fname_train = '../cached_feature_activations_train'
+    cache_fname_valid = '../cached_feature_activations_valid'
     train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname, device)
     valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname, device)
     print('train:',train_ftrs.shape, train_labels.shape)

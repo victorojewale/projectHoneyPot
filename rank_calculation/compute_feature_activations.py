@@ -89,8 +89,8 @@ if __name__ == '__main__':
     train, valid = setup_data_loaders()
     cache_fname_train = '../cached_feature_activations_train'
     cache_fname_valid = '../cached_feature_activations_valid'
-    train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname, device)
-    valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname, device)
-    print('train:',train_ftrs.shape, train_labels.shape)
+    #train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
+    valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname_valid, device)
+    #print('train:',train_ftrs.shape, train_labels.shape)
     print('valid:',valid_ftrs.shape, valid_labels.shape)
     

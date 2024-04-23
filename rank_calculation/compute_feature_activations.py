@@ -11,18 +11,27 @@ import numpy as np
 import pandas as pd
 import torch
 import torchvision
-import os
 import pickle
 from tqdm import tqdm
+# solve the problem of relative imports in python
+import sys
+import os
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(parent_dir)
+from data_handler.data_loader import setup_data_loaders
 
-def load_dataset(dataset_path): 
-    
+
+def get_encoder(model_path = 'models/robust_resnet50.pth'): 
+        #self.model.eval()
+        #with torch.no_grad():
+        #    outputs = self.model(inputs)
+        #return outputs
+        return None
 
 
 def calculate_feature_activations(dataset_path, model_path): 
-    
+    return None
 
 if __name__ == '__main__':
-    dataset_path = 'imagenet path'
-    model_path = 'robust resnet for imagenet'
-    
+    model_path = 'models/robust_resnet50.pth'
+    encoder = get_encoder(model_path)

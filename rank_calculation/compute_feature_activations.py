@@ -66,7 +66,7 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
         all_ftrs, labels = [], []
         encoder = encoder.eval().to(device)
         for dat in loader:
-            x, y = dat[0], dat[1]
+            x, y = dat['image'].to(device), dat['label'].to(device)
             with torch.no_grad():
                 ftrs = encoder(x.to(device)).flatten(1)
                 all_ftrs.extend(ftrs.detach().cpu().numpy())

@@ -36,8 +36,12 @@ if __name__ == '__main__':
     #train spuriosity calculation 
     #spuriosity_data_train = calculate_spuriosity_per_class(train_ftrs, train_labels, spurious_features_by_class)
     #binned_img_idx_train = bin_by_spuriosity(spuriosity_data_train, train_labels, spurious_features_by_class)
-        
+    np.save('../data_annotations/train_spuriosity_per_image.npy', spuriosity_data_train)
+    np.save('../data_annotations/train_binned_image_indices.npy', binned_img_idx_train)
+    
     #validation spuriosity calcuation
     spuriosity_data_valid = calculate_spuriosity_per_class(valid_ftrs, valid_labels, spurious_features_by_class)
     binned_img_idx_valid = bin_by_spuriosity(spuriosity_data_valid, valid_labels, spurious_features_by_class)
+    np.save('../data_annotations/valid_spuriosity_per_image.npy', spuriosity_data_valid)
+    np.save('../data_annotations/valid_binned_image_indices.npy', binned_img_idx_valid)
 

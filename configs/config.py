@@ -10,3 +10,5 @@ class Config:
         self.learning_rate = 0.001
         self.num_epochs = 10
         self.early_stopping_limit = 5
+        self.local_data_path = 'absolute path of the local imagenet dataset'
+        

@@ -34,6 +34,7 @@ def load_human_labels(filename):
     return df
 
 def aggregate_class_wise(mturk_labels): 
+    #aggregate across workers, 3 or more workers label a feature as spurious -> 1, else 0.
     aggregated_df = mturk_labels.groupby(['Input.wordnet_id', 'Input.class_index', 'Input.feature_index', 'Input.feature_rank'])['Answer.main'].sum().reset_index()
     aggregated_df['Answer.main'] = aggregated_df['Answer.main'].apply(lambda x: 1 if x>=3 else 0)
     return aggregated_df

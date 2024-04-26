@@ -21,10 +21,13 @@ if __name__ == '__main__':
     train, valid = setup_data_loaders()
     cache_fname_train = '../cached_feature_activations_train'
     cache_fname_valid = '../cached_feature_activations_valid'
-    #train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
+    print("Calculating training images feature activations")
+    train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
+    print("Calculating validation images feature activations")
     valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname_valid, device)
-    #print('train:',train_ftrs.shape, train_labels.shape)
+    print('train:',train_ftrs.shape, train_labels.shape)
     print('valid:',valid_ftrs.shape, valid_labels.shape)
+    
 
     #get the spurious features by class
     aggregated_data_path = 'data_annotations/aggregated_imagenet_mturk.csv'

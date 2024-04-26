@@ -6,7 +6,7 @@
 #         feature_activations ->  (num_of_images, feature_activations of penultimate layer)
 #         class_labels -> (num_of_images, 1), values in  0-999 for imagenet
 ####
-
+import gc
 import numpy as np
 import pandas as pd
 import torch
@@ -66,6 +66,7 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
         all_ftrs, labels = [], []
         encoder = encoder.eval().to(device)
         batch_num = 0
+        #for train loader, the shuffle needs to be set to false
         for dat in loader:
             x, y = dat['image'].to(device), dat['label']
             with torch.no_grad():
@@ -74,15 +75,17 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
                 labels.extend(y)
             print(f"Batch {batch_num} processed.")
             batch_num+=1
-        ftrs, labels = [np.array(x) for x in [all_ftrs, labels]]
-        # encoder = encoder.cpu()
-
-        dat = dict({'ftrs': ftrs, 'labels': labels})
+            gc.collect()
+        all_ftrs = np.array(all_ftrs)
+        labels = np.array(labels)
+        gc.collect()
+        dat = dict({'ftrs': all_ftrs, 'labels': labels})
         cache_data(cache_fname, dat)
     else:
         dat = load_cached_data(cache_fname)
-        ftrs, labels = [dat[x] for x in ['ftrs', 'labels']]
-    return ftrs, labels
+        all_ftrs, labels = [dat[x] for x in ['ftrs', 'labels']]
+    gc.collect()
+    return all_ftrs, labels
 
 if __name__ == '__main__':
     model_path = '../models/robust_resnet50.pth'
@@ -92,8 +95,10 @@ if __name__ == '__main__':
     train, valid = setup_data_loaders()
     cache_fname_train = '../cached_feature_activations_train'
     cache_fname_valid = '../cached_feature_activations_valid'
-    #train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
+    print("Calculating training images feature activations")
+    train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
+    print("Calculating validation images feature activations")
     valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname_valid, device)
-    #print('train:',train_ftrs.shape, train_labels.shape)
+    print('train:',train_ftrs.shape, train_labels.shape)
     print('valid:',valid_ftrs.shape, valid_labels.shape)
     

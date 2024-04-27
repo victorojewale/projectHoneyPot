@@ -18,7 +18,7 @@ import sys
 import os
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
-from data_handler.data_loader import setup_data_loaders
+from data_handler.salient_imagenet_data_loader import setup_data_loaders
 from collections import OrderedDict
 
 '''below 3 functions are not my own, they are copied from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
@@ -92,7 +92,9 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
-    train, valid = setup_data_loaders()
+    #setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
+    train = setup_data_loaders()
+    valid = setup_data_loaders()
     cache_fname_train = '../cached_feature_activations_train'
     cache_fname_valid = '../cached_feature_activations_valid'
     print("Calculating training images feature activations")

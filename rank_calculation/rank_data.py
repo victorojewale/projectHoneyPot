@@ -18,7 +18,9 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
-    train, valid = setup_data_loaders()
+    #setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
+    train = setup_data_loaders()
+    valid = setup_data_loaders()
     cache_fname_train = '../cached_feature_activations_train'
     cache_fname_valid = '../cached_feature_activations_valid'
     print("Calculating training images feature activations")

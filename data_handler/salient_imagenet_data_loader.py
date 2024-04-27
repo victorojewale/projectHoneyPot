@@ -102,16 +102,32 @@ class SalientImageNet(ImageNet):
             return sample, target
 
     
-def setup_data_loaders(purpose='fine tuning', spilt='val', shuffle=False):
+def setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
     '''
-    purpose: 'fine tuning' or 'spuriosity calculation'
-    Input split (train or val) and shuffle (False for spuriosity calculation, true for training, false for validation).
+    3 possible type of data loaders returned: 
+    
+    1. bin [int] : some bin type as defined in binned_imagenet_train/val.csv, 0, 1, 2 as default. 
+    If bin given, then it will load images of that bin's spuriosity only and obviously only for 357 spurious classes.
+    2. rank_calculation [Boolean] : prepare data loader for rank calculation, i.e, feature activation calculation. 
+    Only returns data for 357 spurious classes.
+    3. neither bin nor rank_calculation passed : this will work as a normal imagenet data loader
+    
+    Input Args: 
+    split ('train' or 'val') 
+    shuffle (true for training, false for validation).
+    
     Get the corresponding data loader (torch.utils.data.DataLoader) as output.
     '''
+    
     config = Config()  
+    if split == 'train': 
+        config.bin_file_path = config.bin_file_path_train
+    elif split == 'val': 
+        config.bin_file_path = config.bin_file_path_val
+    
     transform = Compose([
         Lambda(lambda x: x.convert("RGB") if x.mode != "RGB" else x),
-        Resize(224),
+        Resize(256),
         CenterCrop(224),
         ToTensor(),
         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -125,17 +141,13 @@ def setup_data_loaders(purpose='fine tuning', spilt='val', shuffle=False):
             examples['image'] = [transform(ToPILImage()(image)) for image in examples['image']]
         return examples
     
-    if purpose=='fine tuning': 
-        imagenet_data = FineTuningImageNet(config.local_data_path,
-                                                split=spilt,
-                                                transform=preprocess_data)
-    elif purpose=='spuriosity calculation': 
-        imagenet_data = SpuriosityCalculationImageNet(config.local_data_path,
-                                                split=spilt,
-                                                transform=preprocess_data)
-        
-    data_loader = torch.utils.data.DataLoader(imagenet_data,
-                                          batch_size=config.batch_size,
-                                          shuffle=shuffle)
+    imagenet_data = SalientImageNet(bin=bin, 
+                                    bin_file_path=config.bin_file_path,
+                                    rank_calculation=rank_calculation, 
+                                    spurious_classes_path=config.spurious_classes_path,
+                                    root=config.local_data_path,
+                                    split=split,
+                                    transform=preprocess_data)    
+    data_loader = DataLoader(imagenet_data, batch_size=config.batch_size, shuffle=shuffle)
     return data_loader
 

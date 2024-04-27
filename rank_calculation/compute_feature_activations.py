@@ -21,7 +21,7 @@ sys.path.append(parent_dir)
 from data_handler.salient_imagenet_data_loader import setup_data_loaders
 from collections import OrderedDict
 
-'''below 3 functions are not my own, they are copied from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
+'''below 3 functions are modified from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
 def cache_data(cache_path, data_to_cache):
     os.makedirs('/'.join(cache_path.split('/')[:-1]), exist_ok=True)
     with open(cache_path, 'wb') as f:
@@ -93,8 +93,7 @@ if __name__ == '__main__':
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
     #setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
-    train = setup_data_loaders()
-    valid = setup_data_loaders()
+    train_loader, val_loader = setup_data_loaders(rank_calculation=True)
     cache_fname_train = '../cached_feature_activations_train'
     cache_fname_valid = '../cached_feature_activations_valid'
     print("Calculating training images feature activations")

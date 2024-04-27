@@ -1,1 +1,1 @@
-Input.wordnet_id,Input.class_index,Input.feature_index,Input.feature_rank,Answer.main
+Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047

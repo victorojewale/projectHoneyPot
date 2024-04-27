@@ -102,7 +102,7 @@ class SalientImageNet(ImageNet):
             return sample, target
 
     
-def setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
+def setup_data_loaders(bin=None, rank_calculation=False):
     '''
     3 possible type of data loaders returned: 
     
@@ -114,16 +114,11 @@ def setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=Fa
     
     Input Args: 
     split ('train' or 'val') 
-    shuffle (true for training, false for validation).
     
     Get the corresponding data loader (torch.utils.data.DataLoader) as output.
     '''
     
-    config = Config()  
-    if split == 'train': 
-        config.bin_file_path = config.bin_file_path_train
-    elif split == 'val': 
-        config.bin_file_path = config.bin_file_path_val
+    config = Config() 
     
     transform = Compose([
         Lambda(lambda x: x.convert("RGB") if x.mode != "RGB" else x),
@@ -141,13 +136,21 @@ def setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=Fa
             examples['image'] = [transform(ToPILImage()(image)) for image in examples['image']]
         return examples
     
-    imagenet_data = SalientImageNet(bin=bin, 
-                                    bin_file_path=config.bin_file_path,
+    val_imagenet_data = SalientImageNet(bin=bin, 
+                                    bin_file_path=config.bin_file_path_val,
                                     rank_calculation=rank_calculation, 
                                     spurious_classes_path=config.spurious_classes_path,
                                     root=config.local_data_path,
-                                    split=split,
+                                    split='val',
                                     transform=preprocess_data)    
-    data_loader = DataLoader(imagenet_data, batch_size=config.batch_size, shuffle=shuffle)
-    return data_loader
+    train_imagenet_data = SalientImageNet(bin=bin, 
+                                    bin_file_path=config.bin_file_path_train,
+                                    rank_calculation=rank_calculation, 
+                                    spurious_classes_path=config.spurious_classes_path,
+                                    root=config.local_data_path,
+                                    split='train',
+                                    transform=preprocess_data)    
+    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, shuffle=False)
+    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, shuffle=True)
+    return train_loader, val_loader
 

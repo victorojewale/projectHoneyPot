@@ -10,5 +10,5 @@ class Config:
         self.learning_rate = 0.001
         self.num_epochs = 10
         self.early_stopping_limit = 5
-        self.local_data_path = 'absolute path of the local imagenet dataset'
+        self.local_data_path = 'D:\Brown MS CS\spring 2024\CS2470 DL\project\our project\projectHoneyPot\sample_imagenet'
         

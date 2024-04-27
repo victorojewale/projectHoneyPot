@@ -42,14 +42,21 @@ def store_aggregated_labels(filename, aggregated_labels):
     aggregated_labels.to_csv(filename, index=False)
     return None
 
-
+def filter_spurious_classes(aggregated_mturk_labels): 
+    '''
+    Only take classes which have at least 1 spurious feature in them.
+    '''
+    aggregated_df = aggregated_mturk_labels.groupby(['Input.wordnet_id', 'Input.class_index']).filter(lambda x: x['Answer.main'].sum() > 0).reset_index(drop=True)
+    return aggregated_df
 
 if __name__ == '__main__':
     #the file paths work if you run from root and not within the module folder
     mturk_data_annotations_path = 'data_annotations/mturk_results_imagenet.csv'
     aggregated_data_path = 'data_annotations/aggregated_imagenet_mturk.csv'
+    spurious_classes_path = 'data_annotations/spurious_imagenet_classes.csv'
     mturk_labels = load_human_labels(mturk_data_annotations_path)
     print(len(mturk_labels))
     aggregated_labels = aggregate_class_wise(mturk_labels)
     store_aggregated_labels(aggregated_data_path, aggregated_labels)    
-    
+    spurious_classes = filter_spurious_classes(aggregated_labels) 
+    store_aggregated_labels(spurious_classes_path, spurious_classes)    

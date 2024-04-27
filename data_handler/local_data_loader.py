@@ -5,34 +5,12 @@ from PIL import Image
 import io
 from torchvision.datasets import ImageNet
 
-class subsetImageNet(ImageNet):
-    '''
-    Only 357 out of 1k classes are needed for analysis, so don't load rest of the "junk" data.
-    '''
-    ImageFolder
-    is_valid_file -> image_path and return valid or invalid. #willl raise empty class error if done like this. 
-    # rewrite my own DatasetFolder and copy and put in current folder. 
-    # 
-    def __init__(self, spurious_annotations, **kwargs): 
-        super().__init__(**kwargs)
+
+# is_valid_file(path) takes the whole path, i.e., includes the wordnetID for classes.
+# allow_empty(boolean) some classes won't have any images, i.e., no spurious features containing classes
+class SalientImageNet(ImageNet): 
     
-class SpuriosityCalculationImageNet(subsetImageNet): 
-    '''
-    This dataloader will be used for calculation of the spuriosity of images class wise. 
-    It creates a csv which has class_idx, wordnetID, image name and spuriosity columns. 
-    ''' 
     
-    __getitem__ use full path and split it to find the last token to get fname (pathlib split)
-    def __init__(self, **kwargs): 
-        super().__init__(**kwargs)
-    
-class FineTuningImageNet(subsetImageNet):
-    '''
-    This dataloader will be used for selecting images as per the spuriosity bins.  
-    '''
-    def __init__(self, **kwargs): 
-        super().__init__(**kwargs)
-    is_valid_file -> image_path and return valid or invalid (check on sub-class)
 
     
 def setup_data_loaders(purpose='fine tuning', spilt='val', shuffle=False):

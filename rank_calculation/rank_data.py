@@ -30,7 +30,7 @@ if __name__ == '__main__':
     
 
     #get the spurious features by class
-    aggregated_data_path = 'data_annotations/aggregated_imagenet_mturk.csv'
+    aggregated_data_path = 'data_annotations/spurious_imagenet_classes.csv'
     aggregated_human_labels = pd.read_csv(aggregated_data_path)
     spurious_features_by_class = calc_spurious_features_by_class(aggregated_human_labels)
     print([spurious_features_by_class[i] for i in list(spurious_features_by_class.keys())[:5]])

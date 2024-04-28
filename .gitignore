@@ -9,3 +9,4 @@ models/__pycache__/*
 visualizations/__pycache__/*
 __pycache__/*
 __pycache__/
+feature_activations_data/robust_resnet_50_imagenet_complete/*

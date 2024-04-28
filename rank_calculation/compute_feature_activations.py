@@ -23,15 +23,26 @@ from collections import OrderedDict
 
 '''below 3 functions are modified from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
 def cache_data(cache_path, data_to_cache):
-    #Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
-    os.makedirs('/'.join(cache_path.split('/')[:-1]), exist_ok=True)
-    with open(cache_path, 'wb') as f:
-        pickle.dump(data_to_cache, f)
+    '''
+    input: dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
+    output: a csv file with below columns
+    Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
+    '''
+    # Generate column names for the 2048 columns
+    column_names = [f'Input.feature{i}' for i in range(data_to_cache['ftrs'].shape[1])]
+    df = pd.DataFrame(data_to_cache['ftrs'], columns=column_names)
+    df['Input.class_index'] = data_to_cache['labels']
+    df['Image.file_name'] =  data_to_cache['fnames']
+    
+    df = df[['Input.class_index', 'Image.file_name'] + column_names]
+    # Append DataFrame to CSV file
+    df.to_csv(cache_path, mode='a', header=not os.path.exists(cache_path), index=False)
 
-def load_cached_data(cache_path):
-    with open(cache_path, 'rb') as f:
-        dat = pickle.load(f)
-    return dat
+def count_rows(filename):
+    with open(filename, 'r') as file:
+        num_rows = sum(1 for line in file)
+    return num_rows
+
 
 def get_encoder(model_path = '../models/robust_resnet50.pth', device='cuda', architecture='resnet50'): 
         full_model_dict = torch.load(model_path, map_location=torch.device(device))['model']
@@ -76,17 +87,15 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
             fname = np.array(fname)
             print(f"Batch {batch_num} processed.")
             batch_num+=1
-            print(ftrs.shape, fname.shape, y.shape) #(batch_sz, 2048) (batch_sz,) (batch_sz,)
-            #dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
-            #cache_data(cache_fname, dat)
-            #del dat
-            break
+            #print(ftrs.shape, fname.shape, y.shape) #(batch_sz, 2048) (batch_sz,) (batch_sz,)
+            dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
+            cache_data(cache_fname, dat)
+            del dat
             gc.collect()
-    else:
-        dat = load_cached_data(cache_fname)
-        all_ftrs, labels = [dat[x] for x in ['ftrs', 'labels']]
+    num_rows = count_rows(cache_fname)
+    print("Number of rows in", cache_fname, ":", num_rows)
     gc.collect()
-    return all_ftrs, labels
+    return num_rows
 
 if __name__ == '__main__':
     model_path = '../models/robust_resnet50.pth'
@@ -96,8 +105,8 @@ if __name__ == '__main__':
     
     finetune_setting = ''
     train_loader, val_loader = setup_data_loaders(rank_calculation=True)
-    cache_fname_train = '../feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
-    cache_fname_valid = '../feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_train = '../feature_activations_data/samples/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_valid = '../feature_activations_data/samples/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
     #feature_activations_train_resnet50_.csv
     #Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
     print("Calculating training images feature activations")

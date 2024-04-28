@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 '''below 3 functions are modified from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
 def cache_data(cache_path, data_to_cache):
+    #Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
     os.makedirs('/'.join(cache_path.split('/')[:-1]), exist_ok=True)
     with open(cache_path, 'wb') as f:
         pickle.dump(data_to_cache, f)
@@ -63,24 +64,24 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
     Expects loader to return (inputs, labels) from a classification dataset.
     """
     if not os.path.exists(cache_fname):
-        all_ftrs, labels = [], []
         encoder = encoder.eval().to(device)
         batch_num = 0
         #for train loader, the shuffle needs to be set to false
         for dat in loader:
-            x, y = dat['image'].to(device), dat['label']
+            x, y, fname = dat[0].to(device), dat[1], dat[2]
             with torch.no_grad():
                 ftrs = encoder(x.to(device)).flatten(1)
-                all_ftrs.extend(ftrs.detach().cpu().numpy())
-                labels.extend(y)
+            ftrs = np.array(ftrs.detach().cpu().numpy())
+            y = np.array(y)
+            fname = np.array(fname)
             print(f"Batch {batch_num} processed.")
             batch_num+=1
+            print(ftrs.shape, fname.shape, y.shape)
+            #dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
+            #cache_data(cache_fname, dat)
+            #del dat
+            break
             gc.collect()
-        all_ftrs = np.array(all_ftrs)
-        labels = np.array(labels)
-        gc.collect()
-        dat = dict({'ftrs': all_ftrs, 'labels': labels})
-        cache_data(cache_fname, dat)
     else:
         dat = load_cached_data(cache_fname)
         all_ftrs, labels = [dat[x] for x in ['ftrs', 'labels']]
@@ -92,14 +93,20 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
-    #setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
+    
+    finetune_setting = ''
     train_loader, val_loader = setup_data_loaders(rank_calculation=True)
-    cache_fname_train = '../cached_feature_activations_train'
-    cache_fname_valid = '../cached_feature_activations_valid'
+    cache_fname_train = '../feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_valid = '../feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
+    #feature_activations_train_resnet50_.csv
+    #Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
     print("Calculating training images feature activations")
-    train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
+    _ = calculate_feature_activations(encoder, train_loader, cache_fname_train, device)
+    if _: 
+        print("Training set feature activation completed and stored in", cache_fname_train)
+    
     print("Calculating validation images feature activations")
-    valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname_valid, device)
-    print('train:',train_ftrs.shape, train_labels.shape)
-    print('valid:',valid_ftrs.shape, valid_labels.shape)
+    _ = calculate_feature_activations(encoder, val_loader, cache_fname_valid, device)
+    if _: 
+        print("Validation set feature activation completed and stored in", cache_fname_valid)
     

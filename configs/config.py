@@ -10,7 +10,7 @@ class Config:
         self.learning_rate = 0.001
         self.num_epochs = 10
         self.early_stopping_limit = 5
-        self.local_data_path = '~/data/data/ImageNet/ILSVRC/Data/CLS-LOC'
+        self.local_data_path = '../../imagenet'
         self.bin_file_path_train='../data_annotations/binned_imagenet_train.csv'
         self.bin_file_path_val='../data_annotations/binned_imagenet_val.csv'        
         self.spurious_classes_path='../data_annotations/spurious_imagenet_classes.csv'

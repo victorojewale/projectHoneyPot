@@ -16,14 +16,13 @@ def pca_by_class(csv_filepath1, csv_filepath2, csv_filepath3, class_index):
 
     # class_indices1 = data1["Input.class_index"]
     # file_names1 = data1["Image.file_name"]
-
-    row1 = data1.iloc[class_index][2:].values #assumes class_index and file_name are first 2 columns
-    row2 = data2.iloc[class_index][2:].values
-    row3 = data3.iloc[class_index][2:].values
+    class_images1 = data1[data1['Input.class_index'] == class_index]
+    class_images2 = data2[data2['Input.class_index'] == class_index]
+    class_images3 = data3[data3['Input.class_index'] == class_index]
     
-    principal_components1 = pca_helper(row1)
-    principal_components2 = pca_helper(row2)
-    principal_components3 = pca_helper(row3)
+    principal_components1 = pca_helper(class_images1)
+    principal_components2 = pca_helper(class_images2)
+    principal_components3 = pca_helper(class_images3)
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     axes[0].set_title('Low Spuriosity PCA')
@@ -42,16 +41,11 @@ def pca_by_class(csv_filepath1, csv_filepath2, csv_filepath3, class_index):
 
 
 
-def pca_helper(feature_row):
+def pca_helper(images_features):
     #standardize data
-    feature_row = np.array(feature_row)
-    print(feature_row.shape)
-    feature_row = feature_row.reshape(1,-1)
-    print(feature_row.shape)
-    feature_row = StandardScaler().fit_transform(feature_row)
+    images_features = StandardScaler().fit_transform(images_features)
     #perform pca
     pca = PCA(n_components=2,svd_solver="auto")
-    principal_components = pca.fit_transform(feature_row)
+    principal_components = pca.fit_transform(images_features)
     return principal_components
 
-pca_by_class("test1.csv","test2.csv","test3.csv",2)

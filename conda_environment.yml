@@ -1,0 +1,9 @@
+name: dl_project
+channels:
+  - defaults
+dependencies:
+  - pip
+  - opencv
+  - anaconda::pillow
+  - anaconda::pandas
+  - ipykernel

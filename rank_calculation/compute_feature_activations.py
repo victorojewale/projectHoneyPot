@@ -76,7 +76,7 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
             fname = np.array(fname)
             print(f"Batch {batch_num} processed.")
             batch_num+=1
-            print(ftrs.shape, fname.shape, y.shape)
+            print(ftrs.shape, fname.shape, y.shape) #(batch_sz, 2048) (batch_sz,) (batch_sz,)
             #dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
             #cache_data(cache_fname, dat)
             #del dat

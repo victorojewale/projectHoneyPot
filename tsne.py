@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler
 
-
+"""tsne guidelines: https://www.kaggle.com/code/agsam23/pca-vs-t-sne"""
 
 """
 csv_filepath1 -> low spuriosity dataset

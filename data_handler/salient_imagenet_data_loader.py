@@ -2,7 +2,7 @@
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, Lambda, ToPILImage
 from torch.utils.data import DataLoader
 from PIL import Image
-from torchvision.datasets import ImageNet
+from .torchvision_override.imagenet import ImageNet
 from configs.config import Config
 import pandas as pd
 import os

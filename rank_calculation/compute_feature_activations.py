@@ -105,17 +105,21 @@ if __name__ == '__main__':
     
     finetune_setting = ''
     train_loader, val_loader = setup_data_loaders(rank_calculation=True)
-    cache_fname_train = '../feature_activations_data/samples/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
-    cache_fname_valid = '../feature_activations_data/samples/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
-    #feature_activations_train_resnet50_.csv
-    #Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
-    print("Calculating training images feature activations")
-    _ = calculate_feature_activations(encoder, train_loader, cache_fname_train, device)
-    if _: 
-        print("Training set feature activation completed and stored in", cache_fname_train)
+    #demo/sample code
+    #cache_fname_train = '../feature_activations_data/samples/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    #cache_fname_valid = '../feature_activations_data/samples/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
+    
+    #actual full imagenet code
+    cache_fname_train = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_valid = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
     
     print("Calculating validation images feature activations")
     _ = calculate_feature_activations(encoder, val_loader, cache_fname_valid, device)
     if _: 
         print("Validation set feature activation completed and stored in", cache_fname_valid)
     
+    print("Calculating training images feature activations")
+    _ = calculate_feature_activations(encoder, train_loader, cache_fname_train, device)
+    if _: 
+        print("Training set feature activation completed and stored in", cache_fname_train)
+        

@@ -20,4 +20,5 @@ Third try:
 Some packages might not be available on conda, use below if that's the case.       
 pip install -r pip_requirements.txt       
 
-
+## Get robust resnet pretrained on imagenet: 
+wget -O robust_resnet50.pth  https://www.dropbox.com/s/knf4uimlqsi1yz8/imagenet_l2_3_0.pt?dl=0

@@ -21,9 +21,9 @@ def pca_by_class(csv_filepath1, csv_filepath2, csv_filepath3, class_index):
 
     # class_indices1 = data1["Input.class_index"]
     # file_names1 = data1["Image.file_name"]
-    class_images1 = data1[data1['Input.class_index'] == class_index]
-    class_images2 = data2[data2['Input.class_index'] == class_index]
-    class_images3 = data3[data3['Input.class_index'] == class_index]
+    class_images1 = data1[data1['Input.class_index'] == class_index][:,2:]
+    class_images2 = data2[data2['Input.class_index'] == class_index][:,2:]
+    class_images3 = data3[data3['Input.class_index'] == class_index][:,2:]
     
     principal_components1 = pca_helper(class_images1)
     principal_components2 = pca_helper(class_images2)

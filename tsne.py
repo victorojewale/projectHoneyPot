@@ -49,7 +49,7 @@ def tsne_by_class(csv_filepath1, csv_filepath2, csv_filepath3, class_index):
 
     plt.tight_layout()
     plt.show()
-        
+
 
 def tsne_helper(images_features):
     #standardize data

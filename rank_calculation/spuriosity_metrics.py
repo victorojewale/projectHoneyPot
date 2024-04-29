@@ -47,7 +47,7 @@ def calculate_spuriosity_per_class(ftr_activations_path, output_path, spurious_f
     spurious_features_by_class: a dictionary of class label (0-999) and spurious feature index (0-2047)    
     '''
     feature_activations = pd.read_csv(ftr_activations_path)
-    
+    num_classes = len(spurious_features_by_class.keys())
     for class_idx in spurious_features_by_class: 
         spurious_features_idx = np.array(spurious_features_by_class[class_idx])
         class_data = feature_activations[feature_activations['Input.class_index']==class_idx]
@@ -60,7 +60,9 @@ def calculate_spuriosity_per_class(ftr_activations_path, output_path, spurious_f
             'spuriosity': spuriosity
         })
         cache_data(output_path, spuriosity_df)
-        del spuriosity_df, spuriosity, zscore_activations
+        del spuriosity_df, spuriosity, zscore_activations, feature_activations_of_class, class_data
+        num_classes -= 1 
+        print("Class idx", class_idx, "processed. Classes left", num_classes)
     return count_rows(output_path)
 
 def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class): 
@@ -72,16 +74,23 @@ def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class):
     wordnet_data = pd.read_csv('../data_annotations/imagenet_class_metadata.csv')
     sp_vals_data = pd.read_csv(spuriosity_path)
     sp_vals_data = sp_vals_data.merge(wordnet_data[['Input.class_index', 'Input.wordnet_id']], how='left', on='Input.class_index')
+    num_classes = len(spurious_features_by_class.keys())
     for class_idx in spurious_features_by_class: 
         spuriosity_val_class = sp_vals_data[sp_vals_data['Input.class_index'] == class_idx]
         percentiles = np.percentile(spuriosity_val_class['spuriosity'], [25, 75]) # percentils[0] 25%, percentiles[1] 75%
         result_df = spuriosity_val_class[['Input.wordnet_id', 'Input.class_index', 'image_name']]
-        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 0 if x<=percentiles[0] else x)
-        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 1 if (x>percentiles[0] and x<=percentiles[1]) else x)
-        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 2 if x>percentiles[1] else x)
-        
+        def label_bin(x): 
+            if x<=percentiles[0]: 
+                return int(0)
+            elif x>percentiles[0] and x<=percentiles[1]: 
+                return int(1)
+            elif x>percentiles[1]:
+                return int(2)
+        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(label_bin)
         cache_data(output_path, result_df)
         del result_df
+        num_classes -= 1 
+        print("Class idx", class_idx, "processed. Classes left", num_classes)
     return count_rows(output_path)
 
 if __name__ == '__main__': 

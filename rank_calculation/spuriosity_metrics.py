@@ -71,7 +71,7 @@ def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class):
     '''
     wordnet_data = pd.read_csv('../data_annotations/imagenet_class_metadata.csv')
     sp_vals_data = pd.read_csv(spuriosity_path)
-    sp_vals_data.merge(wordnet_data[['Input.class_index', 'Input.wordnet_id']], how='left', on='Input.class_index')
+    sp_vals_data = sp_vals_data.merge(wordnet_data[['Input.class_index', 'Input.wordnet_id']], how='left', on='Input.class_index')
     for class_idx in spurious_features_by_class: 
         spuriosity_val_class = sp_vals_data[sp_vals_data['Input.class_index'] == class_idx]
         percentiles = np.percentile(spuriosity_val_class['spuriosity'], [25, 75]) # percentils[0] 25%, percentiles[1] 75%

@@ -77,7 +77,7 @@ def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class):
         percentiles = np.percentile(spuriosity_val_class['spuriosity'], [25, 75]) # percentils[0] 25%, percentiles[1] 75%
         result_df = spuriosity_val_class[['Input.wordnet_id', 'Input.class_index', 'image_name']]
         result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 0 if x<=percentiles[0] else x)
-        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 1 if (x>percentiles[0] & x<=percentiles[1]) else x)
+        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 1 if (x>percentiles[0] and x<=percentiles[1]) else x)
         result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(lambda x: 2 if x>percentiles[1] else x)
         
         cache_data(output_path, result_df)

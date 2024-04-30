@@ -10,3 +10,15 @@
 
 ## Public code implementation for generating dataset: 
 https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py
+
+## Environment setup: 
+First try:         
+conda env create -f full_conda_without_builds_environment.yml      
+Second try:         
+conda env create -f conda_environment.yml      
+Third try:             
+Some packages might not be available on conda, use below if that's the case.       
+pip install -r pip_requirements.txt       
+
+## Get robust resnet pretrained on imagenet: 
+wget -O robust_resnet50.pth  https://www.dropbox.com/s/knf4uimlqsi1yz8/imagenet_l2_3_0.pt?dl=0

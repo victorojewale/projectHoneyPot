@@ -21,16 +21,28 @@ sys.path.append(parent_dir)
 from data_handler.salient_imagenet_data_loader import setup_data_loaders
 from collections import OrderedDict
 
-'''below 3 functions are not my own, they are copied from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
+'''below 3 functions are modified from https://github.com/mmoayeri/spuriosity-rankings/blob/main/spuriosity_rankings.py'''
 def cache_data(cache_path, data_to_cache):
-    os.makedirs('/'.join(cache_path.split('/')[:-1]), exist_ok=True)
-    with open(cache_path, 'wb') as f:
-        pickle.dump(data_to_cache, f)
+    '''
+    input: dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
+    output: a csv file with below columns
+    Input.class_index,Image.file_name,Input.feature0,Input.feature1,Input.feature2,Input.feature3,...,Input.feature2047
+    '''
+    # Generate column names for the 2048 columns
+    column_names = [f'Input.feature{i}' for i in range(data_to_cache['ftrs'].shape[1])]
+    df = pd.DataFrame(data_to_cache['ftrs'], columns=column_names)
+    df['Input.class_index'] = data_to_cache['labels']
+    df['Image.file_name'] =  data_to_cache['fnames']
+    
+    df = df[['Input.class_index', 'Image.file_name'] + column_names]
+    # Append DataFrame to CSV file
+    df.to_csv(cache_path, mode='a', header=not os.path.exists(cache_path), index=False)
 
-def load_cached_data(cache_path):
-    with open(cache_path, 'rb') as f:
-        dat = pickle.load(f)
-    return dat
+def count_rows(filename):
+    with open(filename, 'r') as file:
+        num_rows = sum(1 for line in file)
+    return num_rows
+
 
 def get_encoder(model_path = '../models/robust_resnet50.pth', device='cuda', architecture='resnet50'): 
         full_model_dict = torch.load(model_path, map_location=torch.device(device))['model']
@@ -63,44 +75,51 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
     Expects loader to return (inputs, labels) from a classification dataset.
     """
     if not os.path.exists(cache_fname):
-        all_ftrs, labels = [], []
         encoder = encoder.eval().to(device)
         batch_num = 0
         #for train loader, the shuffle needs to be set to false
         for dat in loader:
-            x, y = dat['image'].to(device), dat['label']
+            x, y, fname = dat[0].to(device), dat[1], dat[2]
             with torch.no_grad():
                 ftrs = encoder(x.to(device)).flatten(1)
-                all_ftrs.extend(ftrs.detach().cpu().numpy())
-                labels.extend(y)
+            ftrs = np.array(ftrs.detach().cpu().numpy())
+            y = np.array(y)
+            fname = np.array(fname)
             print(f"Batch {batch_num} processed.")
             batch_num+=1
+            #print(ftrs.shape, fname.shape, y.shape) #(batch_sz, 2048) (batch_sz,) (batch_sz,)
+            dat = dict({'ftrs': ftrs, 'labels': y, 'fnames': fname})
+            cache_data(cache_fname, dat)
+            del dat
             gc.collect()
-        all_ftrs = np.array(all_ftrs)
-        labels = np.array(labels)
-        gc.collect()
-        dat = dict({'ftrs': all_ftrs, 'labels': labels})
-        cache_data(cache_fname, dat)
-    else:
-        dat = load_cached_data(cache_fname)
-        all_ftrs, labels = [dat[x] for x in ['ftrs', 'labels']]
+    num_rows = count_rows(cache_fname)
+    print("Number of rows in", cache_fname, ":", num_rows)
     gc.collect()
-    return all_ftrs, labels
+    return num_rows
 
 if __name__ == '__main__':
     model_path = '../models/robust_resnet50.pth'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
-    #setup_data_loaders(split='val', shuffle=False, bin=None, rank_calculation=False):
-    train = setup_data_loaders()
-    valid = setup_data_loaders()
-    cache_fname_train = '../cached_feature_activations_train'
-    cache_fname_valid = '../cached_feature_activations_valid'
-    print("Calculating training images feature activations")
-    train_ftrs, train_labels = calculate_feature_activations(encoder, train, cache_fname_train, device)
-    print("Calculating validation images feature activations")
-    valid_ftrs, valid_labels = calculate_feature_activations(encoder, valid, cache_fname_valid, device)
-    print('train:',train_ftrs.shape, train_labels.shape)
-    print('valid:',valid_ftrs.shape, valid_labels.shape)
     
+    finetune_setting = ''
+    train_loader, val_loader = setup_data_loaders(rank_calculation=True)
+    #demo/sample code
+    #cache_fname_train = '../feature_activations_data/samples/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    #cache_fname_valid = '../feature_activations_data/samples/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
+    
+    #actual full imagenet code
+    cache_fname_train = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_valid = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
+    
+    print("Calculating validation images feature activations")
+    _ = calculate_feature_activations(encoder, val_loader, cache_fname_valid, device)
+    if _: 
+        print("Validation set feature activation completed and stored in", cache_fname_valid)
+    
+    print("Calculating training images feature activations")
+    _ = calculate_feature_activations(encoder, train_loader, cache_fname_train, device)
+    if _: 
+        print("Training set feature activation completed and stored in", cache_fname_train)
+        

@@ -2,7 +2,7 @@
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, Lambda, ToPILImage
 from torch.utils.data import DataLoader
 from PIL import Image
-from torchvision.datasets import ImageNet
+from .torchvision_override.imagenet import ImageNet
 from configs.config import Config
 import pandas as pd
 import os
@@ -128,28 +128,20 @@ def setup_data_loaders(bin=None, rank_calculation=False):
         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     
-    def preprocess_data(examples):
-        # check if images are already PIL Images
-        if isinstance(examples['image'][0], Image.Image):
-            examples['image'] = [transform(image) for image in examples['image']]
-        else:
-            examples['image'] = [transform(ToPILImage()(image)) for image in examples['image']]
-        return examples
-    
     val_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_val,
                                     rank_calculation=rank_calculation, 
                                     spurious_classes_path=config.spurious_classes_path,
                                     root=config.local_data_path,
                                     split='val',
-                                    transform=preprocess_data)    
+                                    transform=transform)    
     train_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_train,
                                     rank_calculation=rank_calculation, 
                                     spurious_classes_path=config.spurious_classes_path,
                                     root=config.local_data_path,
                                     split='train',
-                                    transform=preprocess_data)    
+                                    transform=transform)    
     val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, shuffle=False)
     train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, shuffle=True)
     return train_loader, val_loader

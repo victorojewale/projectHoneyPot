@@ -1,36 +1,54 @@
 # models/model_manager.py
 import torch
+import os
 from torch import nn, optim
 from torchvision import models
-from data_handler.data_loader import setup_data_loaders
+import time
+
+#from data_handler.salient_imagenet_data_loader import setup_data_loaders
 
 class ModelManager:
     def __init__(self, config):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = self.load_model(config.model_name, config.num_classes)
-        self.train_loader, self.val_loader = setup_data_loaders()
+        self.train_loader = train_loader
+        self.val_loader = val_loader
         self.optimizer = optim.Adam(self.model.fc.parameters(), lr=config.learning_rate)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs = config.num_epochs
         self.early_stopping_limit = config.early_stopping_limit
         self.train_accuracies = []
         self.val_accuracies = []
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def load_model(self, model_name, num_classes):
-        model = getattr(models, model_name)(pretrained=True)
-        for param in model.parameters():
-            param.requires_grad = False
-        model.fc = nn.Linear(model.fc.in_features, num_classes)
-        model.fc.requires_grad = True
-        return model.to(self.device)
+    def load_model(self, model_path = 'robust_resnet50.pth', architecture='resnet50'): 
+            full_model_dict = torch.load(model_path, map_location=torch.device(self.device))['model']
+            model = models.get_model(architecture)
+
+            # Reformat model_dict to be compatible with torchvision
+            model_keys = [k for k in full_model_dict if 'attacker' not in k and 'normalizer' not in k]
+            model_dict = dict({k.split('module.model.')[-1]:full_model_dict[k] for k in model_keys})
+            model.load_state_dict(model_dict)
+            return model.to(self.device)
+    
+    #def load_model(self, model_name, num_classes):
+        #model = getattr(models, model_name)(pretrained=True)
+        #for param in model.parameters():
+        #    param.requires_grad = False
+        #model.fc = nn.Linear(model.fc.in_features, num_classes)
+        #model.fc.requires_grad = True
+        #return model.to(self.device)
+
 
 
     def train_model(self):
-        best_acc = 0
-        epochs_no_improve = 0
+        init_acc = self.evaluate(self.val_loader)
+        #epochs_no_improve = 0
 
         for epoch in range(self.num_epochs):
+            start_time = time.time()
             self.model.train()
+            batch_num = 0
             for batch in self.train_loader:
                 inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
                 self.optimizer.zero_grad()
@@ -38,20 +56,28 @@ class ModelManager:
                 loss = self.criterion(outputs, labels)
                 loss.backward()
                 self.optimizer.step()
+                print("Batch processed, num", batch_num)
+                print("BATCH END | Current Timestamp:", time.time())
+                batch_num += 1
+        
 
             train_acc = self.evaluate(self.train_loader)
             val_acc = self.evaluate(self.val_loader)
             self.train_accuracies.append(train_acc)
             self.val_accuracies.append(val_acc)
-
-            if val_acc > best_acc:
-                best_acc = val_acc
-                epochs_no_improve = 0
+            end_time = time.time()
+            time_taken = end_time - start_time
+            print("EPOCH END | Current Timestamp:", time.time())
+            print("EPOCH END | Time taken:", time_taken, "seconds")
+            if val_acc > init_acc - 5:
+                #best_acc = val_acc
+                self.save_model(f"{self.config.model_name}_best.pth")  # Save the best model
+                #epochs_no_improve = 0
             else:
-                epochs_no_improve += 1
-                if epochs_no_improve == self.early_stopping_limit:
-                    print('Early stopping!')
-                    break
+                #epochs_no_improve += 1
+                #if epochs_no_improve == self.early_stopping_limit:
+                print('Early stopping!')
+                break
 
             print(f'Epoch {epoch+1}: Train Acc = {train_acc}%, Val Acc = {val_acc}%')
 
@@ -67,20 +93,8 @@ class ModelManager:
                 correct += (predicted == labels).sum().item()
         return 100 * correct / total
 
-
-
-#    def load_model(self, model_name, weights_path, num_classes):
-#        # Load the model without pretrained weights and replace the final layer
-#        model = getattr(models, model_name)(pretrained=False)
-#        for param in model.parameters():
-#            param.requires_grad = False  # Freeze all parameters initially
-#        model.fc = nn.Linear(model.fc.in_features, num_classes)  # Replace the final layer
-#        model.fc.requires_grad = True  # Unfreeze the final layer
-
-        # Load state dict if specified (ensure it doesn't reset requires_grad)
-#        if weights_path:
-#            state_dict = torch.load(weights_path)
-#            model.load_state_dict(state_dict)
-        
-#        model.to(self.device)
-#        return model
+    def save_model(self, save_path):
+        """ Save the currently loaded model's state_dict to a file. """
+        full_path = os.path.join(self.config.model_dir, save_path)
+        torch.save(self.model.state_dict(), full_path)
+        print(f"Model saved to {full_path}")

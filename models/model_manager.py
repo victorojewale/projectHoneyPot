@@ -4,6 +4,8 @@ import os
 from torch import nn, optim
 from torchvision import models
 import time
+from torch.nn.parallel import DistributedDataParallel as DDP 
+import torch.multiprocessing as mp 
 
 #from data_handler.salient_imagenet_data_loader import setup_data_loaders
 
@@ -32,8 +34,8 @@ class ModelManager:
             for param in model.parameters():
                 param.requires_grad = False
             model.fc.requires_grad = True
-            #model = nn.DataParallel(model)
-            return model.to(self.device)
+            model = DDP(model, device_ids = [self.device])
+            return model
     
     #def load_model(self, model_name, num_classes):
         #model = getattr(models, model_name)(pretrained=True)
@@ -45,7 +47,7 @@ class ModelManager:
 
 
 
-    def train_model(self):
+    def train_model(self, rank, world_size):
         init_acc = self.evaluate(self.val_loader)
         #epochs_no_improve = 0
 
@@ -54,7 +56,7 @@ class ModelManager:
             self.model.train()
             batch_num = 0
             for batch in self.train_loader:
-                inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
+                inputs, labels = batch['image'].to(rank), batch['label'].to(rank)
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)

@@ -7,8 +7,9 @@ class Config:
         self.weights_path = './models/robust_resnet50.pth' 
         self.model_name = 'resnet50_low'
         self.num_classes = 1000
-        self.batch_size = 32
-        self.learning_rate = 0.001
+        self.batch_size = 32*4 #batch_size * num of gpus
+        self.learning_rate = 0.1
+        self.weights_decay = 0.003
         self.num_epochs = 10
         self.early_stopping_limit = 5
         #self.local_data_path = './sample_imagenet'

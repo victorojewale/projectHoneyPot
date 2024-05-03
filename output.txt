@@ -1,0 +1,11 @@
+starting code...
+starting loader...
+Breaking inside setup data loader function
+Init salient imagenet inside of it now!
+Binning if condition ran, now if of rank calculation. Bin file path csv loaded.
+Validation imagenet dataset worked, creating train dataset
+Init salient imagenet inside of it now!
+Binning if condition ran, now if of rank calculation. Bin file path csv loaded.
+Train dataset worked, going onto dataloader
+Data loader worked, returning it.
+Loader done loading...

@@ -5,6 +5,11 @@ from visualizations.visualization import plot_accuracies
 from configs.config import Config
 from data_handler.salient_imagenet_data_loader import setup_data_loaders
 import os
+import torch.distributed as dist
+import torch.multiprocessing as mp 
+import torch.nn as nn 
+import torch.optim as optim 
+from torch.nn.parallel import DistributedDataParallel as DDP 
 
 
 

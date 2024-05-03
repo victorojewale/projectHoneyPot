@@ -8,12 +8,12 @@ import time
 #from data_handler.salient_imagenet_data_loader import setup_data_loaders
 
 class ModelManager:
-    def __init__(self, config):
+    def __init__(self, config, train_loader, val_loader):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = self.load_model(config.model_name, config.num_classes)
+        self.model = self.load_model()
         self.train_loader = train_loader
         self.val_loader = val_loader
-        self.optimizer = optim.Adam(self.model.fc.parameters(), lr=config.learning_rate)
+        self.optimizer = optim.Adam(self.model.fc.parameters(), lr=config.learning_rate, momentum = config.weights_decay)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs = config.num_epochs
         self.early_stopping_limit = config.early_stopping_limit
@@ -21,7 +21,7 @@ class ModelManager:
         self.val_accuracies = []
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def load_model(self, model_path = 'robust_resnet50.pth', architecture='resnet50'): 
+    def load_model(self, model_path = './models/robust_resnet50.pth', architecture='resnet50'): 
             full_model_dict = torch.load(model_path, map_location=torch.device(self.device))['model']
             model = models.get_model(architecture)
 
@@ -29,6 +29,10 @@ class ModelManager:
             model_keys = [k for k in full_model_dict if 'attacker' not in k and 'normalizer' not in k]
             model_dict = dict({k.split('module.model.')[-1]:full_model_dict[k] for k in model_keys})
             model.load_state_dict(model_dict)
+            for param in model.parameters():
+                param.requires_grad = False
+            model.fc.requires_grad = True
+            #model = nn.DataParallel(model)
             return model.to(self.device)
     
     #def load_model(self, model_name, num_classes):
@@ -71,7 +75,7 @@ class ModelManager:
             print("EPOCH END | Time taken:", time_taken, "seconds")
             if val_acc > init_acc - 5:
                 #best_acc = val_acc
-                self.save_model(f"{self.config.model_name}_best.pth")  # Save the best model
+                self.save_model(f"models/{self.config.model_name}_best.pth")  # Save the best model
                 #epochs_no_improve = 0
             else:
                 #epochs_no_improve += 1

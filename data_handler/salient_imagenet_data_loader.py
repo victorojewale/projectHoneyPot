@@ -36,7 +36,7 @@ class SalientImageNet(ImageNet):
         self.spurious_classes_features = None
         #spurious classes set, only load images of these classes
         self.spurious_classes_wordnetID = set()
-        
+        print("Init salient imagenet inside of it now!")
         if self.bin is not None: 
             if self.bin_file_path is None: 
                 raise Exception("Path to binning information not provided. Use Vanilla imagenet functionality or provide path to csv.")
@@ -45,7 +45,8 @@ class SalientImageNet(ImageNet):
             self.spurious_classes_wordnetID = set(self.image_bin_mapping['Input.wordnet_id'])
             if not self.bin in set(self.image_bin_mapping['bin_type']): 
                 raise Exception("Invalid bin type passed. Please use 0 for low spurious, 1 for medium and 2 for high spurious.")
-
+            self.image_bin_mapping = self.image_bin_mapping.set_index('image_name')['bin_type'].to_dict()
+        print("Binning if condition ran, now if of rank calculation. Bin file path csv loaded.")
         if self.rank_calculation: 
             if self.spurious_classes_path is None: 
                 raise Exception("Path to spurious classes csv not provided. Do you want to use vanilla imagenet instead?")
@@ -72,8 +73,9 @@ class SalientImageNet(ImageNet):
         #only load images corresponding to user passed value of bin type
         if self.bin is not None: 
             #cols: image_name,bin_type
-            image_rows = self.image_bin_mapping[self.image_bin_mapping['image_name'] == fname]
-            if not image_rows.empty and self.bin==image_rows['bin_type'].iloc[0]: 
+            #print("Valid file check being performed!")
+            image_rows = self.image_bin_mapping.get(fname, None)
+            if not (image_rows is None) and self.bin==image_rows: 
                 return True
             else: 
                 return False
@@ -128,7 +130,7 @@ def setup_data_loaders(bin=None, rank_calculation=False):
         ToTensor(),
         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    
+    print("Breaking inside setup data loader function")
     val_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_val,
                                     rank_calculation=rank_calculation, 
@@ -136,6 +138,7 @@ def setup_data_loaders(bin=None, rank_calculation=False):
                                     root=config.local_data_path,
                                     split='val',
                                     transform=transform)    
+    print("Validation imagenet dataset worked, creating train dataset")
     train_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_train,
                                     rank_calculation=rank_calculation, 
@@ -143,7 +146,9 @@ def setup_data_loaders(bin=None, rank_calculation=False):
                                     root=config.local_data_path,
                                     split='train',
                                     transform=transform)    
+    print("Train dataset worked, going onto dataloader")
     val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, shuffle=False)
     train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, shuffle=True)
+    print("Data loader worked, returning it.")
     return train_loader, val_loader
 

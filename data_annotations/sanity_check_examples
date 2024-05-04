@@ -1,3 +1,8 @@
+#guesses: 
+1. Maybe 25% is too strict of a condition to have.
+Solution: Only take 100 images per bin of spuriosity not 325 etc. based on percentiles.
+2. Maybe hyperparams are wrong
+
 #lighter class
 >>> df[df['Input.class_index']==626].groupby('bin_type').sample(3)
        Input.wordnet_id  Input.class_index            image_name  bin_type
@@ -36,3 +41,17 @@
 139940        n02444819                360   n02444819_4582.JPEG         2
 139061        n02444819                360   n02444819_8195.JPEG         2
 139885        n02444819                360  n02444819_11758.JPEG         2
+
+
+
+import os
+
+def count_files_in_subdirectories(root_dir): 
+   for sub_dir, _, files in os.walk(root_dir): 
+     if os.path.basename(sub_dir) in classes: 
+       file_count = len(files)
+       print(f"Subdirector: {sub_dir}, Total files: {file_count}")
+
+# Example usage
+root_directory = '/path/to/your/directory'
+count_files_in_subdirectories(root_directory)

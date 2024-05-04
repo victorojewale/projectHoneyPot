@@ -65,6 +65,34 @@ def calculate_spuriosity_per_class(ftr_activations_path, output_path, spurious_f
         print("Class idx", class_idx, "processed. Classes left", num_classes)
     return count_rows(output_path)
 
+def bin_by_spuriosity_percentiles(spuriosity_path, output_path, spurious_features_by_class): 
+    '''
+    bin the data per class by 0-25 percentile as low spurious, 25-75 as medium 
+    and 75-100 percentile spuriosity as high spurious
+    spurious_features_by_class: dict, key class, value spurious feature index
+    '''
+    wordnet_data = pd.read_csv('../data_annotations/imagenet_class_metadata.csv')
+    sp_vals_data = pd.read_csv(spuriosity_path)
+    sp_vals_data = sp_vals_data.merge(wordnet_data[['Input.class_index', 'Input.wordnet_id']], how='left', on='Input.class_index')
+    num_classes = len(spurious_features_by_class.keys())
+    for class_idx in spurious_features_by_class: 
+        spuriosity_val_class = sp_vals_data[sp_vals_data['Input.class_index'] == class_idx]
+        percentiles = np.percentile(spuriosity_val_class['spuriosity'], [25, 75]) # percentils[0] 25%, percentiles[1] 75%
+        result_df = spuriosity_val_class[['Input.wordnet_id', 'Input.class_index', 'image_name']]
+        def label_bin(x): 
+            if x<=percentiles[0]: 
+                return int(0)
+            elif x>percentiles[0] and x<=percentiles[1]: 
+                return int(1)
+            elif x>percentiles[1]:
+                return int(2)
+        result_df['bin_type'] = spuriosity_val_class['spuriosity'].apply(label_bin)
+        cache_data(output_path, result_df)
+        del result_df
+        num_classes -= 1 
+        print("Class idx", class_idx, "processed. Classes left", num_classes)
+    return count_rows(output_path)
+
 def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class): 
     '''
     bin the data per class by 0-25 percentile as low spurious, 25-75 as medium 

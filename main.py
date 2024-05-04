@@ -19,26 +19,24 @@ def main(rank, world_size):
     torch.cuda.set_device(rank)
     config = Config()
 
-    bin_type = 2  
+    bin_type = 0  
     print("starting loader...")
     train_loaderFull, val_loaderFull = setup_data_loaders()
     train_loader, val_loader = setup_data_loaders(bin=bin_type)
-    print(f"Loader done loading..., len of train in process with rank {rank} is ", len(train_loader))
-    manager = ModelManager(config, train_loader, val_loaderFull, rank)
-    print("This is the ranking", rank)
-    print(f"Process {rank}: CUDA device ID:", torch.cuda.current_device())
-    manager.train_model(rank, world_size)  
+    print(f"Loader loaded, train batches in process {rank} ", len(train_loader), "val batches: ", len(val_loaderFull))
 
+    manager = ModelManager(config, train_loader, val_loaderFull, rank)
+    print(f"Process {rank}: CUDA device ID:", torch.cuda.current_device())
+    manager.train_model(rank, world_size) 
 
     plot_save_path = os.path.join(os.getcwd(), f'training_validation_accuracy_bin_{bin_type}.png')
     plot_accuracies(manager.train_accuracies, manager.val_accuracies, save_path=plot_save_path)
-
     print(f"Plot has been saved to: {plot_save_path}")
     cleanup()
 
 def setup(rank, world_size): 
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
+    os.environ['MASTER_PORT'] = '12356'
     dist.init_process_group('gloo', rank=rank, world_size=world_size)
 
 def cleanup(): 

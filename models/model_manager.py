@@ -8,7 +8,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp 
 from sklearn.metrics import accuracy_score
 
-
 #from data_handler.salient_imagenet_data_loader import setup_data_loaders
 
 class ModelManager:
@@ -59,70 +58,63 @@ class ModelManager:
     def train_model(self, rank, world_size):
         best_acc = 0.0
         epochs_no_improve = 0
-        init_acc = self.evaluate(self.val_loader)
-        print("Init Accuracy", init_acc)
-
+        #init_acc = self.evaluate(self.val_loader, rank)
+        #print(f"{rank}: Init Validation Accuracy", init_acc)
+        #init_train_acc = self.evaluate(self.train_loader, rank)
+        #print(f"{rank}: Init Training Accuracy", init_train_acc)
 
         for epoch in range(self.num_epochs):
             start_time = time.time()
             self.model.train()
             batch_num = 0
-            train_preds, train_labels = [], []
+            total, correct = 0, 0
+            total_loss = 0
             for batch in self.train_loader:
-                try: 
-                    inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
-                except: 
-                    raise Exception("Fails in this process with rank:", rank)
+                inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
                 loss.backward()
                 self.optimizer.step()
-
-                train_preds.extend(outputs.argmax(dim=1).cpu().numpy())
-                train_labels.extend(labels.cpu().numpy())
-
-
-                print(f"Batch processed, num {batch_num}, rank {rank}")
-                print("BATCH END | Total Time Elapsed:", (time.time()-start_time)/60.0)
+                total_loss += loss.item()
+                _, predicted = torch.max(outputs.data, 1)
+                batch_total = labels.size(0)
+                total += batch_total
+                batch_correct = (predicted == labels).sum().item()
+                correct += batch_correct
+                batch_acc = 100*batch_correct/batch_total
+                print(f'Rank {rank}, Batch: {batch_num} Loss: {loss.item()}, Accuracy: {batch_acc}, Time elapsed: {(time.time()-start_time)/60.0}')
+                self.train_accuracies.append(batch_acc)
                 batch_num += 1
-        
-
-            train_acc = accuracy_score(train_labels, train_preds)
+            
+            train_acc = 100 * correct / total
 
             # Evaluate validation set
-            val_acc = self.evaluate(self.val_loader)
+            val_acc = self.evaluate(self.val_loader, rank)
 
-            # Append accuracies to lists
-            self.train_accuracies.append(train_acc)
-            self.val_accuracies.append(val_acc)
-
-
-            if val_acc > best_acc:
-                best_acc = val_acc
-                epochs_no_improve = 0  
-                model_save_path = f"{self.config.model_name}_best.pth"
-                self.save_model(model_save_path)
-                print(f"Best model updated: {model_save_path} with accuracy: {best_acc}%")
-            else:
-                epochs_no_improve += 1
-
-                # Implement early stopping if no improvement is detected
-                if epochs_no_improve == self.early_stopping_limit:
-                    print("Early stopping!")
-                    break
+            #if val_acc > best_acc:
+            #    best_acc = val_acc
+            #    epochs_no_improve = 0  
+            #    model_save_path = f"{self.config.model_name}_best.pth"
+            #    self.save_model(model_save_path)
+            #    print(f"Best model updated: {model_save_path} with accuracy: {best_acc}%")
+            #else:
+            #    epochs_no_improve += 1
+            #
+            #    # Implement early stopping if no improvement is detected
+            #    if epochs_no_improve == self.early_stopping_limit:
+            #        print("Early stopping!")
+            #        break
 
             end_time = time.time()
             time_taken = end_time - start_time
-            print("EPOCH END | Current Timestamp:", time.time())
-            print("EPOCH END | Time taken:", time_taken / 60.0, "minutes")
-            print(f'Epoch {epoch + 1}: Train Acc = {train_acc}%, Val Acc = {val_acc}%')
+            print(f'{rank}: Epoch {epoch}: Train Acc = {train_acc}%, Val Acc = {val_acc}%, Loss = {total_loss/len(self.train_loader)}, Time taken:{time_taken / 60.0}mins')
 
 
 
-    def evaluate(self, loader):
+    def evaluate(self, loader, rank):
         self.model.eval()
-        print("Evaluating...")
+        print(f"{rank} Evaluation in frozen mode...")
         correct, total = 0, 0
         batch_num = 0
         with torch.no_grad():
@@ -131,13 +123,16 @@ class ModelManager:
                 inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-                print(f"Batch processed, num {batch_num}")
-                print("BATCH END | Total Time Elapsed:", (time.time()-start_time)/60.0)
+                batch_total = labels.size(0)
+                total += batch_total
+                batch_correct = (predicted == labels).sum().item()
+                correct += batch_correct
+                batch_acc = 100*batch_correct/batch_total
+                self.val_accuracies.append(batch_acc)
+                print(f'Rank {rank},batch {batch_num}, Accuracy: {batch_acc}, Time elapsed: {(time.time()-start_time)/60.0}')
                 batch_num += 1
         accuracy = 100 * correct / total
-        print(f'Accuracy: {accuracy:.2f}%')
+        print(f'{rank}: Accuracy: {accuracy:.2f}%')
         return accuracy
 
     def save_model(self, save_path):

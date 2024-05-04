@@ -99,7 +99,6 @@ class SalientImageNet(ImageNet):
         if self.transform is not None:
             sample = self.transform(sample)
         if self.rank_calculation:
-
             return {'image': sample, 'label': target, 'file_name': os.path.basename(path)}
         else:
             return {'image': sample, 'label': target}
@@ -152,8 +151,8 @@ def setup_data_loaders(bin=None, rank_calculation=False):
                                     transform=transform)
     train_sampler = DistributedSampler(train_imagenet_data)    
     #print("Train dataset worked, going onto dataloader")
-    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler, num_workers = 4)
-    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler, num_workers = 4)
+    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler, num_workers =8)
+    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler, num_workers = 8)
     print("Data loader worked, returning it.")
     return train_loader, val_loader
 

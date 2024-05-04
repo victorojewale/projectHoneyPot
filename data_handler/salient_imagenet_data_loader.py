@@ -104,7 +104,8 @@ class SalientImageNet(ImageNet):
         else:
             return {'image': sample, 'label': target}
 
-
+def convert_to_rgb(image):
+    return image.convert("RGB") if image.mode != "RGB" else image
     
 def setup_data_loaders(bin=None, rank_calculation=False):
     '''
@@ -124,8 +125,6 @@ def setup_data_loaders(bin=None, rank_calculation=False):
     
     config = Config() 
     
-    def convert_to_rgb(image): 
-        return image.convert("RGB") if image.model!="RGB" else image
     transform = Compose([
         Lambda(convert_to_rgb),
         Resize(256),

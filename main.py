@@ -19,7 +19,7 @@ def main(rank, world_size):
     torch.cuda.set_device(rank)
     config = Config()
 
-    bin_type = 0  
+    bin_type = 2  
     print("starting loader...")
     train_loaderFull, val_loaderFull = setup_data_loaders()
     train_loader, val_loader = setup_data_loaders(bin=bin_type)
@@ -38,7 +38,7 @@ def main(rank, world_size):
 
 def setup(rank, world_size): 
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12356'
+    os.environ['MASTER_PORT'] = '12355'
     dist.init_process_group('gloo', rank=rank, world_size=world_size)
 
 def cleanup(): 

@@ -5,7 +5,7 @@ class Config:
         self.dataset_name = 'zh-plus/tiny-imagenet'
         self.model_dir = './models' 
         self.weights_path = './models/robust_resnet50.pth' 
-        self.model_name = 'resnet50_low'
+        self.model_name = 'resnet50_high'
         self.num_classes = 1000
         self.batch_size = 800
         self.learning_rate = 0.1

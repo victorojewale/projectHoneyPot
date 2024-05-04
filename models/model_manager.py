@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score
 
 class ModelManager:
     def __init__(self, config, train_loader, val_loader, rank):
-        
+        self.config = config
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu", rank)
         self.rank = rank
         self.model = self.load_model()
@@ -57,9 +57,11 @@ class ModelManager:
 
 
     def train_model(self, rank, world_size):
+        best_acc = 0.0
+        epochs_no_improve = 0
         init_acc = self.evaluate(self.val_loader)
         print("Init Accuracy", init_acc)
-        #epochs_no_improve = 0
+
 
         for epoch in range(self.num_epochs):
             start_time = time.time()
@@ -96,20 +98,25 @@ class ModelManager:
             self.val_accuracies.append(val_acc)
 
 
+            if val_acc > best_acc:
+                best_acc = val_acc
+                epochs_no_improve = 0  
+                model_save_path = f"{self.config.model_name}_best.pth"
+                self.save_model(model_save_path)
+                print(f"Best model updated: {model_save_path} with accuracy: {best_acc}%")
+            else:
+                epochs_no_improve += 1
+
+                # Implement early stopping if no improvement is detected
+                if epochs_no_improve == self.early_stopping_limit:
+                    print("Early stopping!")
+                    break
+
             end_time = time.time()
             time_taken = end_time - start_time
             print("EPOCH END | Current Timestamp:", time.time())
-            print("EPOCH END | Time taken:", time_taken/60.0, "minutes")
-            print(f'Epoch {epoch+1}: Train Acc = {train_acc}%, Val Acc = {val_acc}%')
-            if val_acc > init_acc - 5:
-                #best_acc = val_acc
-                self.save_model(f"models/{self.config.model_name}_best.pth")  # Save the best model
-                #epochs_no_improve = 0
-            else:
-                #epochs_no_improve += 1
-                #if epochs_no_improve == self.early_stopping_limit:
-                print('Early stopping!')
-                break
+            print("EPOCH END | Time taken:", time_taken / 60.0, "minutes")
+            print(f'Epoch {epoch + 1}: Train Acc = {train_acc}%, Val Acc = {val_acc}%')
 
 
 

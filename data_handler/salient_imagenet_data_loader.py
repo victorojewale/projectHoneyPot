@@ -124,8 +124,10 @@ def setup_data_loaders(bin=None, rank_calculation=False):
     
     config = Config() 
     
+    def convert_to_rgb(image): 
+        return image.convert("RGB") if image.model!="RGB" else image
     transform = Compose([
-        Lambda(lambda x: x.convert("RGB") if x.mode != "RGB" else x),
+        Lambda(convert_to_rgb),
         Resize(256),
         CenterCrop(224),
         ToTensor(),

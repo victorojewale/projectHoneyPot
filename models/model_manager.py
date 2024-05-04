@@ -18,7 +18,7 @@ class ModelManager:
         self.model = self.load_model()
         self.train_loader = train_loader
         self.val_loader = val_loader
-        self.optimizer = optim.Adam(self.model.module.fc.parameters(), lr=config.learning_rate, weight_decay = config.weights_decay)
+        self.optimizer = optim.SGD(self.model.module.fc.parameters(), lr=config.learning_rate, momentum = config.weights_decay)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs = config.num_epochs
         self.early_stopping_limit = config.early_stopping_limit
@@ -58,10 +58,10 @@ class ModelManager:
     def train_model(self, rank, world_size):
         best_acc = 0.0
         epochs_no_improve = 0
-        #init_acc = self.evaluate(self.val_loader, rank)
-        #print(f"{rank}: Init Validation Accuracy", init_acc)
-        #init_train_acc = self.evaluate(self.train_loader, rank)
-        #print(f"{rank}: Init Training Accuracy", init_train_acc)
+        init_acc = self.evaluate(self.val_loader, rank)
+        print(f"{rank}: Init Validation Accuracy", init_acc)
+        init_train_acc = self.evaluate(self.train_loader, rank, 'train')
+        print(f"{rank}: Init Training Accuracy", init_train_acc)
 
         for epoch in range(self.num_epochs):
             start_time = time.time()
@@ -112,9 +112,9 @@ class ModelManager:
 
 
 
-    def evaluate(self, loader, rank):
+    def evaluate(self, loader, rank, mode='val'):
         self.model.eval()
-        print(f"{rank} Evaluation in frozen mode...")
+        print(f"{rank} Evaluation in frozen mode, data {mode}")
         correct, total = 0, 0
         batch_num = 0
         with torch.no_grad():
@@ -128,11 +128,14 @@ class ModelManager:
                 batch_correct = (predicted == labels).sum().item()
                 correct += batch_correct
                 batch_acc = 100*batch_correct/batch_total
-                self.val_accuracies.append(batch_acc)
+                if mode=='val': 
+                    self.val_accuracies.append(batch_acc)
+                else: 
+                    self.train_accuracies.append(batch_acc)
                 print(f'Rank {rank},batch {batch_num}, Accuracy: {batch_acc}, Time elapsed: {(time.time()-start_time)/60.0}')
                 batch_num += 1
         accuracy = 100 * correct / total
-        print(f'{rank}: Accuracy: {accuracy:.2f}%')
+        print(f'{rank}: {mode} Accuracy: {accuracy:.2f}%')
         return accuracy
 
     def save_model(self, save_path):

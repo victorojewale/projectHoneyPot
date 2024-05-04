@@ -15,14 +15,18 @@ import torch
 
 def main(rank, world_size):
     setup(rank, world_size)
+    #os.environ['CUDA_VISIBLE_DEVICES'] = str(rank) 
+    torch.cuda.set_device(rank)
     config = Config()
 
     bin_type = 0  
     print("starting loader...")
+    train_loaderFull, val_loaderFull = setup_data_loaders()
     train_loader, val_loader = setup_data_loaders(bin=bin_type)
-    print("Loader done loading...")
-    manager = ModelManager(config, train_loader, val_loader)
-
+    print(f"Loader done loading..., len of train in process with rank {rank} is ", len(train_loader))
+    manager = ModelManager(config, train_loader, val_loaderFull, rank)
+    print("This is the ranking", rank)
+    print(f"Process {rank}: CUDA device ID:", torch.cuda.current_device())
     manager.train_model(rank, world_size)  
 
 
@@ -34,8 +38,8 @@ def main(rank, world_size):
 
 def setup(rank, world_size): 
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
-    dist.init_process_group('nccl', rank=rank, world_size=world_size)
+    os.environ['MASTER_PORT'] = '12356'
+    dist.init_process_group('gloo', rank=rank, world_size=world_size)
 
 def cleanup(): 
     dist.destroy_process_group()

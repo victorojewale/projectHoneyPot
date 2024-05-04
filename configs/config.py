@@ -7,7 +7,7 @@ class Config:
         self.weights_path = './models/robust_resnet50.pth' 
         self.model_name = 'resnet50_low'
         self.num_classes = 1000
-        self.batch_size = 32
+        self.batch_size = 800
         self.learning_rate = 0.1
         self.weights_decay = 0.003
         self.num_epochs = 10

@@ -17,7 +17,7 @@ from torch.utils.data.distributed import DistributedSampler
 #    otherwise just return image, label as normal
 
 class SalientImageNet(ImageNet): 
-    def __init__(self, bin=None, bin_file_path=None, rank_calculation=False, spurious_classes_path=None, **kwargs): 
+    def __init__(self, bin=None, bin_file_path=None, rank_calculation=False, spurious_classes_path=None, spuriosity_gap=False, k=10, val_spuriosity_path=None, portion='top', **kwargs): 
         '''
         bin = 'low', 'medium' or 'high'
         bin_file_path = path to csv file containing class, image file_name and the spuriosity rank and the bin to which this class belongs to
@@ -31,6 +31,11 @@ class SalientImageNet(ImageNet):
         self.bin = bin
         self.bin_file_path = bin_file_path
         self.image_bin_mapping = None
+        #spuriosity gap params
+        self.spuriosity_gap = spuriosity_gap
+        self.k = k
+        self.val_spuriosity_path = val_spuriosity_path
+        self.portion = portion
         #spuriousity calculation functionality
         self.rank_calculation = rank_calculation
         self.spurious_classes_path = spurious_classes_path
@@ -54,7 +59,18 @@ class SalientImageNet(ImageNet):
             self.spurious_classes_features = pd.read_csv(self.spurious_classes_path)
             #Input.wordnet_id,Input.class_index,Input.feature_index,Input.feature_rank,Answer.main
             self.spurious_classes_wordnetID = set(self.spurious_classes_features['Input.wordnet_id'])
-
+        if self.spuriosity_gap: 
+            if self.val_spuriosity_path is None: 
+                raise Exception("Path to Val spuriousity data csv not provided. Do you want to use vanilla imagenet instead?")
+            self.spurious_classes_features = pd.read_csv(self.spurious_classes_path)
+            self.spurious_classes_wordnetID = set(self.spurious_classes_features['Input.wordnet_id'])
+            class_wordnet_map = self.spurious_classes_features.set_index('Input.Class_index')['Input.wordnet_id'].to_dict()
+            self.val_spuriosity = pd.read_csv(self.val_spuriosity_path).groupby('Input.class_index')
+            self.spuriosity_gap_dict = {} #key is wordnet id and value is a set of valid image names
+            for group_name, group_data in self.val_spuriosity: 
+                wordnet_key = class_wordnet_map[group_name]
+                self.spuriosity_gap_dict[wordnet_key] = self.top_or_bottom[group_data, self.k, self.portion]
+            
         if self.bin is None and not self.rank_calculation: 
             #neither binning nor rank calculation, vanilla imagenet behavior
             valid_image_check = None
@@ -64,7 +80,15 @@ class SalientImageNet(ImageNet):
             allow_empty = True
         
         super().__init__(is_valid_file=valid_image_check, allow_empty=allow_empty, **kwargs)
-
+    
+    def top_or_bottom(self, group, k, portion): 
+        if portion=='bottom': 
+            bottom_k = set(group.nsmallest(k, 'image_name')['image_name'])
+            return bottom_k
+        elif portion=='top': 
+            top_k = set(group.nlargest(k, 'image_name')['image_name'])
+            return top_k
+        
     def is_valid_file(self, path): 
         image_class = os.path.basename(os.path.dirname(path))
         fname = os.path.basename(path)
@@ -82,6 +106,11 @@ class SalientImageNet(ImageNet):
                 return False
         elif self.rank_calculation: 
             return True
+        elif self.spuriosity_gap: 
+            if fname in self.spuriosity_gap_dict[image_class]: 
+                return True
+            else: 
+                return False
         else: 
             raise Exception("Both bin and rank calculation tried at the same time, this is invalid.")
 
@@ -106,7 +135,7 @@ class SalientImageNet(ImageNet):
 def convert_to_rgb(image):
     return image.convert("RGB") if image.mode != "RGB" else image
     
-def setup_data_loaders(bin=None, rank_calculation=False):
+def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k=10):
     '''
     3 possible type of data loaders returned: 
     
@@ -132,6 +161,35 @@ def setup_data_loaders(bin=None, rank_calculation=False):
         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
+    if spuriosity_gap: 
+        top_val_imagenet_data = SalientImageNet(bin=bin, 
+                                    bin_file_path=config.bin_file_path_val,
+                                    rank_calculation=rank_calculation, 
+                                    spurious_classes_path=config.spurious_classes_path,
+                                    spuriosity_gap=spuriosity_gap,
+                                    k=k,
+                                    val_spuriosity_path=config.val_spuriosity_path,
+                                    portion='top',
+                                    root=config.local_data_path,
+                                    split='val',
+                                    transform=transform)    
+        top_val_sampler = DistributedSampler(top_val_imagenet_data)
+        top_val_loader = DataLoader(top_val_imagenet_data, batch_size=config.batch_size, sampler=top_val_sampler, num_workers =8)
+        
+        bottom_val_imagenet_data = SalientImageNet(bin=bin, 
+                                    bin_file_path=config.bin_file_path_val,
+                                    rank_calculation=rank_calculation, 
+                                    spurious_classes_path=config.spurious_classes_path,
+                                    spuriosity_gap=spuriosity_gap,
+                                    k=k,
+                                    val_spuriosity_path=config.val_spuriosity_path,
+                                    portion='bottom',
+                                    root=config.local_data_path,
+                                    split='val',
+                                    transform=transform)    
+        bottom_val_sampler = DistributedSampler(bottom_val_imagenet_data)
+        bottom_val_loader = DataLoader(bottom_val_imagenet_data, batch_size=config.batch_size, sampler=bottom_val_sampler, num_workers =8)
+        return top_val_loader, bottom_val_loader
     #print("Breaking inside setup data loader function")
     val_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_val,

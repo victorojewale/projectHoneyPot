@@ -10,7 +10,7 @@ class Config:
         self.batch_size = 800
         self.learning_rate = 0.1
         self.weights_decay = 0.003
-        self.num_epochs = 1
+        self.num_epochs = 5
         self.early_stopping_limit = 5
         #self.local_data_path = './sample_imagenet'
         self.local_data_path = './softlinks'

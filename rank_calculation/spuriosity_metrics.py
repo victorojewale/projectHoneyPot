@@ -112,8 +112,11 @@ def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class):
         middle_end_index = middle_start_index + 100
         # Select the bottom 100, middle 100, and top 100 rows
         bottom_100 = sorted_df.head(100)
+        bottom_100['bin_type'] = bottom_100['spuriosity'].apply(lambda x: 0)
         middle_100 = sorted_df.iloc[middle_start_index:middle_end_index]
+        middle_100['bin_type'] = middle_100['spuriosity'].apply(lambda x: 1)
         top_100 = sorted_df.tail(100)
+        top_100['bin_type'] = top_100['spuriosity'].apply(lambda x: 2)
         # Concatenate the selected rows into a single DataFrame
         result_df = pd.concat([bottom_100, middle_100, top_100])
         cache_data(output_path, result_df)

@@ -22,3 +22,7 @@ pip install -r pip_requirements.txt
 
 ## Get robust resnet pretrained on imagenet: 
 wget -O robust_resnet50.pth  https://www.dropbox.com/s/knf4uimlqsi1yz8/imagenet_l2_3_0.pt?dl=0
+
+## Binning logic:
+1. The train is binned as bottom 100, top 100 and medium 100 as sorted by spuriosity. 
+2. For val there's only 50 images per class, so it's sorted as bottom 25 percentile, 25-75 percentile and 75 and above percentile.

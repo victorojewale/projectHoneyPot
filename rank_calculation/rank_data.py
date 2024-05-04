@@ -23,10 +23,6 @@ if __name__ == '__main__':
     print('output check', len(spurious_features_by_class), ', should be 357 for imagenet.')
 
     #Use below version of the code if given is the spuriosity values and you just need to create new binning categories by diff binning logic
-    val_spuriosity_path = '../data_annotations/validation_imagenet_spuriosity.csv'
-    binned_img_idx_valid = bin_by_spuriosity(val_spuriosity_path, config.bin_file_path_val, spurious_features_by_class)
-    print("Processed binning of", binned_img_idx_valid, "rows of validation spuriosity data.")
-
     train_spuriosity_path = '../data_annotations/train_imagenet_spuriosity.csv'
     binned_img_idx_train = bin_by_spuriosity(train_spuriosity_path, config.bin_file_path_train, spurious_features_by_class)
     print("Processed binning of", binned_img_idx_train, "rows of train spuriosity data.")

@@ -53,13 +53,8 @@ def get_encoder(model_path = '../models/robust_resnet50.pth', device='cuda', arc
         model_dict = dict({k.split('module.model.')[-1]:full_model_dict[k] for k in model_keys})
         model.load_state_dict(model_dict)
         
-        normalizer_keys = [k for k in full_model_dict if 'attacker' not in k and 'normalizer' in k]
-        normalizer_dict = dict({k.split('_')[-1]:full_model_dict[k] for k in normalizer_keys})
-        normalizer = torchvision.transforms.Normalize(mean=normalizer_dict['mean'], std=normalizer_dict['std'])
-        
         encoder = torch.nn.Sequential(
             OrderedDict([
-                ('normalizer',normalizer), 
                 *list(model.named_children())[:-1], 
                 ('flatten', torch.nn.Flatten())
             ])

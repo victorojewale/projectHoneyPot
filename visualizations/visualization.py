@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 
-def plot_accuracies(train_accuracies, val_accuracies):
+def plot_accuracies(train_accuracies, val_accuracies, save_path):
     plt.figure(figsize=(10, 5))
     plt.plot(train_accuracies, label='Training Accuracy')
     plt.plot(val_accuracies, label='Validation Accuracy')
@@ -12,6 +12,6 @@ def plot_accuracies(train_accuracies, val_accuracies):
     plt.legend()
     plt.grid(True)
     plt.show()
-    #plt.savefig(save_path)
+    plt.savefig(save_path)
     plt.close()  
-    #print(f"Plot saved to {save_path}")
+    print(f"Plot saved to {save_path}")

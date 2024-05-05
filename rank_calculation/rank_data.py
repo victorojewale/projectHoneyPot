@@ -9,8 +9,8 @@ import os
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
 
-from compute_feature_activations import * 
-from spuriosity_metrics import * 
+from rank_calculation.compute_feature_activations import * 
+from rank_calculation.spuriosity_metrics import * 
 from configs.config import Config
 
 if __name__ == '__main__': 
@@ -22,6 +22,13 @@ if __name__ == '__main__':
     spurious_features_by_class = calc_spurious_features_by_class(aggregated_human_labels)
     print('output check', len(spurious_features_by_class), ', should be 357 for imagenet.')
 
+    #Use below version of the code if given is the spuriosity values and you just need to create new binning categories by diff binning logic
+    train_spuriosity_path = '../data_annotations/train_imagenet_spuriosity.csv'
+    binned_img_idx_train = bin_by_spuriosity(train_spuriosity_path, config.bin_file_path_train, spurious_features_by_class)
+    print("Processed binning of", binned_img_idx_train, "rows of train spuriosity data.")
+    
+    #Use below below version of the code if given is feature activations and you want to calculate spuriosity and binning categories
+    '''
     #validation spuriosity calcuation
     val_raw_feature_act_path = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_valid_resnet50_.csv'
     val_spuriosity_path = '../data_annotations/validation_imagenet_spuriosity.csv'
@@ -39,4 +46,4 @@ if __name__ == '__main__':
     if rows_processed: 
         binned_img_idx_train = bin_by_spuriosity(train_spuriosity_path, config.bin_file_path_train, spurious_features_by_class)
         print("Processed binning of", binned_img_idx_train, "rows of train spuriosity data.")
-    
+    '''

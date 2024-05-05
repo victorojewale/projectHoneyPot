@@ -1,0 +1,57 @@
+#guesses: 
+1. Maybe 25% is too strict of a condition to have.
+Solution: Only take 100 images per bin of spuriosity not 325 etc. based on percentiles.
+2. Maybe hyperparams are wrong
+
+#lighter class
+>>> df[df['Input.class_index']==626].groupby('bin_type').sample(3)
+       Input.wordnet_id  Input.class_index            image_name  bin_type
+262128        n03666591                626  n03666591_37261.JPEG         0
+261788        n03666591                626  n03666591_18748.JPEG         0
+261714        n03666591                626  n03666591_27051.JPEG         0
+261886        n03666591                626  n03666591_13120.JPEG         1
+261609        n03666591                626  n03666591_12872.JPEG         1
+261899        n03666591                626  n03666591_64429.JPEG         1
+261703        n03666591                626  n03666591_32952.JPEG         2
+261964        n03666591                626  n03666591_10687.JPEG         2
+262208        n03666591                626  n03666591_36860.JPEG         2
+
+#beetle 
+>>> df[df['Input.class_index']==306].groupby('bin_type').sample(3)
+       Input.wordnet_id  Input.class_index           image_name  bin_type
+100346        n02174001                306  n02174001_2796.JPEG         0
+99785         n02174001                306  n02174001_1668.JPEG         0
+100012        n02174001                306  n02174001_1708.JPEG         0
+100550        n02174001                306  n02174001_5087.JPEG         1
+99983         n02174001                306  n02174001_2896.JPEG         1
+100575        n02174001                306   n02174001_593.JPEG         1
+99843         n02174001                306  n02174001_2266.JPEG         2
+99974         n02174001                306  n02174001_8929.JPEG         2
+99838         n02174001                306  n02174001_5218.JPEG         2
+
+#otter
+>>> df[df['Input.class_index']==360].groupby('bin_type').sample(3)
+       Input.wordnet_id  Input.class_index            image_name  bin_type
+138998        n02444819                360   n02444819_1792.JPEG         0
+139828        n02444819                360   n02444819_8643.JPEG         0
+138808        n02444819                360  n02444819_24503.JPEG         0
+139535        n02444819                360   n02444819_6047.JPEG         1
+139479        n02444819                360   n02444819_9553.JPEG         1
+139093        n02444819                360   n02444819_8129.JPEG         1
+139940        n02444819                360   n02444819_4582.JPEG         2
+139061        n02444819                360   n02444819_8195.JPEG         2
+139885        n02444819                360  n02444819_11758.JPEG         2
+
+
+
+import os
+
+def count_files_in_subdirectories(root_dir): 
+   for sub_dir, _, files in os.walk(root_dir): 
+     if os.path.basename(sub_dir) in classes: 
+       file_count = len(files)
+       print(f"Subdirector: {sub_dir}, Total files: {file_count}")
+
+# Example usage
+root_directory = '/path/to/your/directory'
+count_files_in_subdirectories(root_directory)

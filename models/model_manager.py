@@ -120,12 +120,13 @@ class ModelManager:
             })
 
 
-            if spuriosity_gap <= 5.0:  
-                model_save_path = f"{self.config.model_name}_best.pth"
-                self.save_model(model_save_path)
-                print(f"Best model updated: {model_save_path} with train acc {train_acc}, val_acc {val_acc}, loss {total_loss/len(self.train_loader)}, sg {spuriosity_gap}%")
-                break
-
+            #if spuriosity_gap <= 5.0:  
+                #model_save_path = f"{self.config.model_name}_best.pth"
+                #self.save_model(model_save_path)
+                #print(f"Best model updated: {model_save_path} with train acc {train_acc}, val_acc {val_acc}, loss {total_loss/len(self.train_loader)}, sg {spuriosity_gap}%")
+                #break
+            model_save_path = f"{self.config.model_name}_best.pth"
+            self.save_model(model_save_path)
             end_time = time.time()
             time_taken = end_time - start_time
             print(f'{rank}: Epoch {epoch+1}: Train Acc = {train_acc}%, Val Acc = {val_acc}%, Loss = {total_loss/len(self.train_loader)}, Spuriosity Gap: {spuriosity_gap}, Time taken:{time_taken / 60.0}mins')

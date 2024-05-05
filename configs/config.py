@@ -5,12 +5,12 @@ class Config:
         self.dataset_name = 'zh-plus/tiny-imagenet'
         self.model_dir = './models' 
         self.weights_path = './models/robust_resnet50.pth' 
-        self.model_name = 'resnet50_low'
+        self.model_name = 'resnet50_mid'
         self.num_classes = 1000
-        self.batch_size = 128
-        self.learning_rate = 0.001
-        self.weights_decay = 0.9
-        self.num_epochs = 20
+        self.batch_size = 512
+        self.learning_rate = 0.005
+        self.weights_decay = 0.999
+        self.num_epochs = 5
         self.early_stopping_limit = 5
         #self.local_data_path = './sample_imagenet'
         self.local_data_path = './softlinks'

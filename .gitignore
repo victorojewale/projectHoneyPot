@@ -12,3 +12,4 @@ __pycache__/
 feature_activations_data/robust_resnet_50_imagenet_complete/*.csv
 softlinks
 wandb
+feature_activations_data

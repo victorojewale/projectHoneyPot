@@ -6,6 +6,7 @@ from .torchvision_override.imagenet import ImageNet
 from configs.config import Config
 import pandas as pd
 import os
+import torch
 from torch.utils.data.distributed import DistributedSampler
 
 # is_valid_file(path) takes the whole path, i.e., includes the wordnetID for classes.
@@ -127,10 +128,8 @@ class SalientImageNet(ImageNet):
         sample = self.loader(path)
         if self.transform is not None:
             sample = self.transform(sample)
-        if self.rank_calculation:
-            return {'image': sample, 'label': target, 'file_name': os.path.basename(path)}
-        else:
-            return {'image': sample, 'label': target}
+        return {'image': sample, 'label': target, 'file_name': os.path.basename(path)}
+        
 
 def convert_to_rgb(image):
     return image.convert("RGB") if image.mode != "RGB" else image
@@ -150,7 +149,7 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
     
     Get the corresponding data loader (torch.utils.data.DataLoader) as output.
     '''
-    
+    distributed = torch.distributed.is_initialized()
     config = Config() 
     
     transform = Compose([
@@ -173,8 +172,8 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
                                     root=config.local_data_path,
                                     split='val',
                                     transform=transform)    
-        top_val_sampler = DistributedSampler(top_val_imagenet_data)
-        top_val_loader = DataLoader(top_val_imagenet_data, batch_size=config.batch_size, sampler=top_val_sampler, num_workers =4)
+        top_val_sampler = DistributedSampler(top_val_imagenet_data) if distributed else None 
+        top_val_loader = DataLoader(top_val_imagenet_data, batch_size=config.batch_size, sampler=top_val_sampler, num_workers =8)
         
         bottom_val_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_val,
@@ -187,8 +186,8 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
                                     root=config.local_data_path,
                                     split='val',
                                     transform=transform)    
-        bottom_val_sampler = DistributedSampler(bottom_val_imagenet_data)
-        bottom_val_loader = DataLoader(bottom_val_imagenet_data, batch_size=config.batch_size, sampler=bottom_val_sampler, num_workers =4)
+        bottom_val_sampler = DistributedSampler(bottom_val_imagenet_data) if distributed else None 
+        bottom_val_loader = DataLoader(bottom_val_imagenet_data, batch_size=config.batch_size, sampler=bottom_val_sampler, num_workers =8)
         print("Top and bottom val loaders for spuriosity gap calculation worked, returning and exiting.")
         return top_val_loader, bottom_val_loader
     #print("Breaking inside setup data loader function")
@@ -199,7 +198,7 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
                                     root=config.local_data_path,
                                     split='val',
                                     transform=transform)    
-    val_sampler = DistributedSampler(val_imagenet_data)
+    val_sampler = DistributedSampler(val_imagenet_data) if distributed else None 
     #print("Validation imagenet dataset worked, creating train dataset")
     train_imagenet_data = SalientImageNet(bin=bin, 
                                     bin_file_path=config.bin_file_path_train,
@@ -208,10 +207,10 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
                                     root=config.local_data_path,
                                     split='train',
                                     transform=transform)
-    train_sampler = DistributedSampler(train_imagenet_data)    
+    train_sampler = DistributedSampler(train_imagenet_data) if distributed else None    
     #print("Train dataset worked, going onto dataloader")
-    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler, num_workers =4)
-    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler, num_workers = 4)
+    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler, num_workers = 8)
+    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler, num_workers = 8)
     print("Data loader worked, returning it.")
     return train_loader, val_loader
 

@@ -1,5 +1,5 @@
 # main.py
-
+import wandb
 from models.model_manager import ModelManager
 from visualizations.visualization import plot_accuracies
 from configs.config import Config
@@ -13,6 +13,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch
 
 
+
+
 def main(rank, world_size):
     setup(rank, world_size)
     #os.environ['CUDA_VISIBLE_DEVICES'] = str(rank) 
@@ -21,11 +23,12 @@ def main(rank, world_size):
 
     bin_type = 0  
     print("starting loader...")
+    top_val_loader, bottom_val_loader = setup_data_loaders(spuriosity_gap=True, k=10)
     train_loaderFull, val_loaderFull = setup_data_loaders()
     train_loader, val_loader = setup_data_loaders(bin=bin_type)
-    print(f"Loader loaded, train batches in process {rank} ", len(train_loader), "val batches: ", len(val_loaderFull))
+    print(f"Loader loaded, train batches in process {rank} ", len(train_loader), "val batches: ", len(val_loaderFull), "top 10 val batches:", len(top_val_loader), "bottom 10 val batches:", len(bottom_val_loader))
 
-    manager = ModelManager(config, train_loader, val_loaderFull, rank)
+    manager = ModelManager(config, train_loader, val_loaderFull, top_val_loader, bottom_val_loader,  rank)
     print(f"Process {rank}: CUDA device ID:", torch.cuda.current_device())
     manager.train_model(rank, world_size) 
 

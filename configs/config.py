@@ -8,9 +8,11 @@ class Config:
         self.model_name = 'resnet50_mid'
         self.num_classes = 1000
         self.batch_size = 512
-        self.learning_rate = 0.005
-        self.weights_decay = 0.999
-        self.num_epochs = 5
+        #self.learning_rate = 0.005 #previous
+        #self.weights_decay = 0.999 #previous
+        self.learning_rate = 0.01 # now
+        self.weights_decay = 0.9 # now
+        self.num_epochs = 7
         self.early_stopping_limit = 5
         #self.local_data_path = './sample_imagenet'
         self.local_data_path = './softlinks'

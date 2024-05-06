@@ -80,7 +80,7 @@ if __name__ == '__main__':
     model_paths = [
         './models/resnet50_high_best.pth',
         './models/resnet50_mid_best.pth',
-        './models/resnet50_low_bestFull.pth'
+        './models/resnet50_low_best.pth'
     ]
 
     # Set device and architecture
@@ -89,22 +89,22 @@ if __name__ == '__main__':
 
     # Control: Feature activations for validation bin 1
     val_bin = 1
-    _, val_loader_bin1 = setup_data_loaders(bin=val_bin)
+    val_loader_bin1, _ = setup_data_loaders(bin=val_bin)
 
     for i, model_path in enumerate(model_paths):
         encoder = get_encoder(model_path, architecture, device)
-        cache_fname_bin1 = f'./feature_activations_data/model{i + 1}_val_bin_{val_bin}.csv'
+        cache_fname_bin1 = f'./feature_activations_data/model{i + 1}_bin_{val_bin}.csv'
         print(f"Calculating feature activations for bin {val_bin} using model {i + 1}")
         _ = calculate_feature_activations(encoder, val_loader_bin1, cache_fname_bin1, device)
         if _:
             print(f"Feature activations saved to {cache_fname_bin1}")
 
     # Test: Feature activations for all spurious validation sets
-    _, val_loader_spurious = setup_data_loaders(rank_calculation=True)
+    val_loader_spurious, _ = setup_data_loaders(rank_calculation=True)
 
     for i, model_path in enumerate(model_paths):
         encoder = get_encoder(model_path, architecture, device)
-        cache_fname_spurious = f'./feature_activations_data/model{i + 1}_val_spurious.csv'
+        cache_fname_spurious = f'./feature_activations_data/model{i + 1}_spurious.csv'
         print(f"Calculating feature activations for spurious sets using model {i + 1}")
         _ = calculate_feature_activations(encoder, val_loader_spurious, cache_fname_spurious, device)
         if _:

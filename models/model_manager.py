@@ -21,7 +21,7 @@ class ModelManager:
         self.val_loader = val_loader
         self.top_val_loader = top_val_loader
         self.bottom_val_loader = bottom_val_loader
-        self.optimizer = optim.SGD(self.model.module.fc.parameters(), lr=config.learning_rate, momentum = config.weights_decay)
+        self.optimizer = optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=config.learning_rate, momentum = config.weights_decay)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs = config.num_epochs
         self.early_stopping_limit = config.early_stopping_limit
@@ -43,12 +43,21 @@ class ModelManager:
             model.load_state_dict(model_dict)
 
 
-            for param in model.parameters():
+            # layer3 (third-last residual block), layer4 (last residual block), and the fully connected (fc) layer
+            for param in model.layer3.parameters():
                 param.requires_grad = False
+            for param in model.layer4.parameters():
+                param.requires_grad = True
             for param in model.fc.parameters():
                 param.requires_grad = True
-            model.to(self.rank)
-            model = DDP(model, device_ids = [self.rank])
+
+            # Verify that there are trainable parameters before applying DDP
+            trainable_params = sum(p.requires_grad for p in model.parameters())
+            if trainable_params == 0:
+                raise ValueError("No trainable parameters detected for fine-tuning.")
+
+            model.to(self.device)
+            model = DDP(model, device_ids=[self.rank])
             return model
     
     #def load_model(self, model_name, num_classes):
@@ -121,10 +130,10 @@ class ModelManager:
 
 
             #if spuriosity_gap <= 5.0:  
-                #model_save_path = f"{self.config.model_name}_best.pth"
-                #self.save_model(model_save_path)
-                #print(f"Best model updated: {model_save_path} with train acc {train_acc}, val_acc {val_acc}, loss {total_loss/len(self.train_loader)}, sg {spuriosity_gap}%")
-                #break
+            #    model_save_path = f"{self.config.model_name}_best.pth"
+            #    self.save_model(model_save_path)
+            #    print(f"Best model updated: {model_save_path} with train acc {train_acc}, val_acc {val_acc}, loss {total_loss/len(self.train_loader)}, sg {spuriosity_gap}%")
+            #    break
             model_save_path = f"{self.config.model_name}_best.pth"
             self.save_model(model_save_path)
             end_time = time.time()

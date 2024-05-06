@@ -52,13 +52,70 @@ def kmeans(pca_vector, id_vector, num_clusters):
         cluster_list.append(indices)
     return cluster_list
 
-def plot_venn(low_pca, low_id, med_pca, med_id, high_pca, high_id, num_clusters):
+def plot_venn(low_pca, low_id, med_pca, med_id, high_pca, high_id, num_clusters, lN = None, mN = None, hN = None, incl_PCA = False):
     low_kmeans = KMeansModel(low_pca, low_id, num_clusters)
     med_kmeans = KMeansModel(med_pca, med_id, num_clusters)
     high_kmeans = KMeansModel(high_pca, high_id, num_clusters)
-    low_set = set(low_kmeans.return_cluster_list()[0].flatten())
-    med_set = set(med_kmeans.return_cluster_list()[0].flatten())
-    high_set = set(high_kmeans.return_cluster_list()[0].flatten())
+    if incl_PCA:
+        low_kmeans = KMeansModel(low_pca, low_id, num_clusters)
+        med_kmeans = KMeansModel(med_pca, med_id, num_clusters)
+        high_kmeans = KMeansModel(high_pca, high_id, num_clusters)
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        axes[0].set_title('Low Spuriosity PCA')
+        axes[0].scatter(low_kmeans.X[:, 0], low_kmeans.X[:, 1], c=low_kmeans.y_kmeans, s=50, cmap='viridis')
+        for (k,(i, j)) in enumerate(zip(low_kmeans.X[:, 0], low_kmeans.X[:, 1])):
+            name = lN[k]
+            axes[0].text(i, j, name)
+        axes[1].set_title('Medium Spuriosity PCA')
+        axes[1].scatter(med_kmeans.X[:, 0], med_kmeans.X[:, 1], c=med_kmeans.y_kmeans, s=50, cmap='viridis')
+        for (k,(i, j)) in enumerate(zip(med_kmeans.X[:, 0], med_kmeans.X[:, 1])):
+            name = mN[k]
+            axes[1].text(i, j, name)
+        axes[2].set_title('High Spuriosity PCA')
+        axes[2].scatter(high_kmeans.X[:, 0], high_kmeans.X[:, 1], c=high_kmeans.y_kmeans, s=50, cmap='viridis')
+        for (k,(i, j)) in enumerate(zip(high_kmeans.X[:, 0], high_kmeans.X[:, 1])):
+            name = hN[k]
+            axes[2].text(i, j, name)
+        for i in range(3):
+            axes[i].set_xlabel('Principal Component 1')
+            axes[i].set_ylabel('Principal Component 2')
+            axes[i].grid(True)
+        plt.tight_layout()
+        plt.show()
+    
+    low_set = set()
+    med_set = set()
+    high_set = set()
+
+    if incl_PCA:
+        low_set = set(low_kmeans.return_cluster_list()[0].flatten())
+        print(f"low set 1 is {low_set}")
+        med_set = set(med_kmeans.return_cluster_list()[0].flatten())
+        print(f"med set 1 is {med_set}")
+        high_set = set(high_kmeans.return_cluster_list()[0].flatten())
+        print(f"high set 1 is {high_set}")
+    else:
+        low_set = set(low_kmeans.return_cluster_list()[0].flatten())
+        low_names = [lN[x] for x in low_set]
+        print(f"low set 1 is {low_names}")
+        low_set = set(low_kmeans.return_cluster_list()[1].flatten())
+        low_names = [lN[x] for x in low_set]
+        print(f"low set 2 is {low_names}")
+
+        med_set = set(med_kmeans.return_cluster_list()[0].flatten())
+        med_names = [mN[x] for x in med_set]
+        print(f"med set 1 is {med_names}")
+        med_set = set(med_kmeans.return_cluster_list()[1].flatten())
+        med_names = [mN[x] for x in med_set]
+        print(f"med set 2 is {med_names}")
+
+        high_set = set(high_kmeans.return_cluster_list()[0].flatten())
+        high_names = [hN[x] for x in high_set]
+        print(f"high set 1 is {high_names}")
+        high_set = set(high_kmeans.return_cluster_list()[1].flatten())
+        high_names = [hN[x] for x in high_set]
+        print(f"high set 2 is {high_names}")
+
     venn3([low_set, med_set, high_set], ('low spuriosity', 'medium spuriosity', 'high spuriosity'))
     plt.show()
         
@@ -70,15 +127,20 @@ class KMeansModel:
         self.m = pca_vector.shape[0]
         self.c = pca_vector.shape[1]
         assert self.m == id_vector.shape[0]
-        self.kmeans = KMeans(n_clusters=num_clusters, random_state=0, n_init="auto").fit(pca_vector)
+        kmeans = KMeans(n_clusters=num_clusters, random_state=0, n_init="auto")
+        kmeans.fit(pca_vector)
+        self.y_kmeans = kmeans.predict(self.X)
+        self.labels = kmeans.labels_
+        self.cluster_centers = kmeans.cluster_centers_
+
         
     def plot_kmeans_clusters_2d(self):
         '''
         Plots the kmeans clusters, only works on 2D PCA results
         '''
-        y_kmeans = self.kmeans.predict(self.X)
+        y_kmeans = self.y_kmeans
         plt.scatter(self.X[:, 0], self.X[:, 1], c=y_kmeans, s=50, cmap='viridis')
-        centers = kmeans.cluster_centers_
+        centers = self.cluster_centers
         plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
         plt.show()
 
@@ -88,7 +150,7 @@ class KMeansModel:
         :return: cluster_list: list of clusters resulting from k-means, with each cluster consisting of the ID's of relevant images
         '''
         # labels is an np array of size (m, ) with each value referring to the number of the cluster at each index
-        labels = self.kmeans.labels_
+        labels = self.labels
         cluster_list = []
         for i in range(self.num_clusters):
             indices = np.where(labels == i)[0]

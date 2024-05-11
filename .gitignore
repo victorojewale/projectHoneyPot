@@ -1,0 +1,14 @@
+# ignore large saved models, too big for git
+models/*.pt
+models/*.pth
+# ignore platform/os dependent python byte code
+process_feature_labels/__pycache__/*
+configs/__pycache__/*
+data_handler/__pycache__/*
+models/__pycache__/*
+visualizations/__pycache__/*
+__pycache__/*
+__pycache__/
+feature_activations_data/robust_resnet_50_imagenet_complete/*.csv
+softlinks
+

@@ -30,9 +30,12 @@ def get_encoder(model_path, architecture, device='cuda'):
     """Initialize and return an encoder model by removing the final classification layer."""
     # Load the model architecture without pre-trained weights
     model = getattr(torchvision.models, architecture)(pretrained=False)
-
+    full_model_dict = torch.load(model_path, map_location=torch.device(device))
+    
     # Load state dictionary from the trained model file
-    model.load_state_dict(torch.load(model_path, map_location=torch.device(device)))
+    model_keys = [k for k in full_model_dict if 'attacker' not in k and 'normalizer' not in k]
+    model_dict = dict({k.split('module.')[-1]:full_model_dict[k] for k in model_keys})
+    model.load_state_dict(model_dict)
 
     encoder = torch.nn.Sequential(
         OrderedDict([
@@ -75,9 +78,9 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
 if __name__ == '__main__':
     # Paths to the fine-tuned models
     model_paths = [
-        '../models/resnet50_high_best.pth',
-        '../models/resnet50_mid_best.pth',
-        '../models/resnet50_low_best.pth'
+        './models/resnet50_high_best.pth',
+        './models/resnet50_mid_best.pth',
+        './models/resnet50_low_best.pth'
     ]
 
     # Set device and architecture
@@ -86,22 +89,22 @@ if __name__ == '__main__':
 
     # Control: Feature activations for validation bin 1
     val_bin = 1
-    _, val_loader_bin1 = setup_data_loaders(bin=val_bin)
+    val_loader_bin1, _ = setup_data_loaders(bin=val_bin)
 
     for i, model_path in enumerate(model_paths):
         encoder = get_encoder(model_path, architecture, device)
-        cache_fname_bin1 = f'../feature_activations_data/model{i + 1}_val_bin_{val_bin}.csv'
+        cache_fname_bin1 = f'./feature_activations_data/model{i + 1}_bin_{val_bin}.csv'
         print(f"Calculating feature activations for bin {val_bin} using model {i + 1}")
         _ = calculate_feature_activations(encoder, val_loader_bin1, cache_fname_bin1, device)
         if _:
             print(f"Feature activations saved to {cache_fname_bin1}")
 
     # Test: Feature activations for all spurious validation sets
-    _, val_loader_spurious = setup_data_loaders(rank_calculation=True)
+    val_loader_spurious, _ = setup_data_loaders(rank_calculation=True)
 
     for i, model_path in enumerate(model_paths):
         encoder = get_encoder(model_path, architecture, device)
-        cache_fname_spurious = f'../feature_activations_data/model{i + 1}_val_spurious.csv'
+        cache_fname_spurious = f'./feature_activations_data/model{i + 1}_spurious.csv'
         print(f"Calculating feature activations for spurious sets using model {i + 1}")
         _ = calculate_feature_activations(encoder, val_loader_spurious, cache_fname_spurious, device)
         if _:

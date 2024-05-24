@@ -1,8 +1,3 @@
-#guesses: 
-1. Maybe 25% is too strict of a condition to have.
-Solution: Only take 100 images per bin of spuriosity not 325 etc. based on percentiles.
-2. Maybe hyperparams are wrong
-
 #lighter class
 >>> df[df['Input.class_index']==626].groupby('bin_type').sample(3)
        Input.wordnet_id  Input.class_index            image_name  bin_type

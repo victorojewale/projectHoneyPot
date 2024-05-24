@@ -37,7 +37,7 @@ if __name__ == '__main__':
     rows_processed = calculate_spuriosity_per_class(val_raw_feature_act_path, val_spuriosity_path, spurious_features_by_class)
     print("Generated spuriosity for validation data, rows produced", rows_processed)
     if rows_processed: 
-        binned_img_idx_valid = bin_by_spuriosity(val_spuriosity_path, config.bin_file_path_val, spurious_features_by_class)
+        binned_img_idx_valid = bin_by_spuriosity_percentiles(val_spuriosity_path, config.bin_file_path_val, spurious_features_by_class)
         print("Processed binning of", binned_img_idx_valid, "rows of validation spuriosity data.")
     
     #train spuriosity calcuation

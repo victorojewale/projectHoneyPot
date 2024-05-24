@@ -93,7 +93,7 @@ def calculate_feature_activations(encoder, loader, cache_fname, device='cuda'):
     return num_rows
 
 if __name__ == '__main__':
-    model_path = '../models/robust_resnet50.pth'
+    model_path = './models/robust_resnet50.pth'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     architecture = 'resnet50'
     encoder = get_encoder(model_path, device, architecture)
@@ -105,8 +105,8 @@ if __name__ == '__main__':
     #cache_fname_valid = '../feature_activations_data/samples/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
     
     #actual full imagenet code
-    cache_fname_train = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
-    cache_fname_valid = '../feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_train = './feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_train_' + architecture + '_' + finetune_setting + '.csv'
+    cache_fname_valid = './feature_activations_data/robust_resnet_50_imagenet_complete/feature_activations_valid_' + architecture + '_' + finetune_setting + '.csv'
     
     print("Calculating validation images feature activations")
     _ = calculate_feature_activations(encoder, val_loader, cache_fname_valid, device)

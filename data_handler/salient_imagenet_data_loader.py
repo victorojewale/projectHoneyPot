@@ -208,8 +208,8 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
                                     transform=transform)
     train_sampler = DistributedSampler(train_imagenet_data) if distributed else None    
     #print("Train dataset worked, going onto dataloader")
-    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler, num_workers = 8)
-    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler, num_workers = 8)
+    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler)#, num_workers = 8)
+    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler)#, num_workers = 8)
     print("Data loader worked, returning it.")
     return train_loader, val_loader
 

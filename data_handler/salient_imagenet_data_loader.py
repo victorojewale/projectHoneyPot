@@ -115,7 +115,7 @@ class SalientImageNet(ImageNet):
         else: 
             raise Exception("Both bin and rank calculation tried at the same time, this is invalid.")
 
-    #def __getitem__(self, index): 
+    def __getitem__(self, index): 
         """
         Args:
             index (int): Index
@@ -123,7 +123,6 @@ class SalientImageNet(ImageNet):
             tuple: (sample, target) where target is class_index of the target class.
             tuple: (sample, target, file_name (str)) in case of spurious ranking calculation
         """
-    def __getitem__(self, index):
         path, target = self.samples[index]
         sample = self.loader(path)
         if self.transform is not None:

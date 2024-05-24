@@ -115,7 +115,7 @@ class SalientImageNet(ImageNet):
         else: 
             raise Exception("Both bin and rank calculation tried at the same time, this is invalid.")
 
-    #def __getitem__(self, index): 
+    def __getitem__(self, index): 
         """
         Args:
             index (int): Index
@@ -123,7 +123,6 @@ class SalientImageNet(ImageNet):
             tuple: (sample, target) where target is class_index of the target class.
             tuple: (sample, target, file_name (str)) in case of spurious ranking calculation
         """
-    def __getitem__(self, index):
         path, target = self.samples[index]
         sample = self.loader(path)
         if self.transform is not None:
@@ -209,8 +208,8 @@ def setup_data_loaders(bin=None, rank_calculation=False, spuriosity_gap=False, k
                                     transform=transform)
     train_sampler = DistributedSampler(train_imagenet_data) if distributed else None    
     #print("Train dataset worked, going onto dataloader")
-    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler, num_workers = 8)
-    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler, num_workers = 8)
+    val_loader = DataLoader(val_imagenet_data, batch_size=config.batch_size, sampler=val_sampler)#, num_workers = 8)
+    train_loader = DataLoader(train_imagenet_data, batch_size=config.batch_size, sampler=train_sampler)#, num_workers = 8)
     print("Data loader worked, returning it.")
     return train_loader, val_loader
 

@@ -71,7 +71,7 @@ def bin_by_spuriosity_percentiles(spuriosity_path, output_path, spurious_feature
     and 75-100 percentile spuriosity as high spurious
     spurious_features_by_class: dict, key class, value spurious feature index
     '''
-    wordnet_data = pd.read_csv('../data_annotations/imagenet_class_metadata.csv')
+    wordnet_data = pd.read_csv('./data_annotations/imagenet_class_metadata.csv')
     sp_vals_data = pd.read_csv(spuriosity_path)
     sp_vals_data = sp_vals_data.merge(wordnet_data[['Input.class_index', 'Input.wordnet_id']], how='left', on='Input.class_index')
     num_classes = len(spurious_features_by_class.keys())
@@ -99,7 +99,7 @@ def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class):
     and top 100 spuriosity as high spurious
     spurious_features_by_class: dict, key class, value spurious feature index
     '''
-    wordnet_data = pd.read_csv('../data_annotations/imagenet_class_metadata.csv')
+    wordnet_data = pd.read_csv('./data_annotations/imagenet_class_metadata.csv')
     sp_vals_data = pd.read_csv(spuriosity_path)
     sp_vals_data = sp_vals_data.merge(wordnet_data[['Input.class_index', 'Input.wordnet_id']], how='left', on='Input.class_index')
     num_classes = len(spurious_features_by_class.keys())
@@ -126,7 +126,7 @@ def bin_by_spuriosity(spuriosity_path, output_path, spurious_features_by_class):
     return count_rows(output_path)
 
 if __name__ == '__main__': 
-    aggregated_data_path = '../data_annotations/spurious_imagenet_classes.csv'
+    aggregated_data_path = './data_annotations/spurious_imagenet_classes.csv'
     aggregated_human_labels = pd.read_csv(aggregated_data_path)
     spurious_features_by_class = calc_spurious_features_by_class(aggregated_human_labels)
     #sanity check: for 5 random classes, get the spurious feature indices
